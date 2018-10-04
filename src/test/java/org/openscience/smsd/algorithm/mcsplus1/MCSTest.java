@@ -11,16 +11,18 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.io.MDLV2000Reader;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.smsd.Isomorphism;
 import org.openscience.smsd.interfaces.Algorithm;
+
 import uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator;
+import uk.ac.ebi.reactionblast.tools.rxnfile.MDLV2000Reader;
 
 /**
  *
