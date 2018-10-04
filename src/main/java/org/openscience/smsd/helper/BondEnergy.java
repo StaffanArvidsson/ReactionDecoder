@@ -37,9 +37,9 @@ import org.openscience.cdk.interfaces.IBond.Order;
  */
 public class BondEnergy {
 
-    private String symbol1 = "";
-    private String symbol2 = "";
-    private IBond.Order bondOrder = null;
+    private String symbol1;
+    private String symbol2;
+    private IBond.Order bondOrder;
     private int energy = -1;
 
     /**

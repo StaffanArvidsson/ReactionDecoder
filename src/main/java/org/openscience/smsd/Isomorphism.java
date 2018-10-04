@@ -25,6 +25,7 @@ package org.openscience.smsd;
 
 import java.io.Serializable;
 import java.util.logging.Level;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
@@ -35,10 +36,6 @@ import org.openscience.smsd.algorithm.single.SingleMappingHandler;
 import org.openscience.smsd.algorithm.vflib.VF2MCS;
 import org.openscience.smsd.helper.MoleculeInitializer;
 import org.openscience.smsd.interfaces.Algorithm;
-import static org.openscience.smsd.interfaces.Algorithm.CDKMCS;
-import static org.openscience.smsd.interfaces.Algorithm.DEFAULT;
-import static org.openscience.smsd.interfaces.Algorithm.MCSPlus;
-import static org.openscience.smsd.interfaces.Algorithm.VFLibMCS;
 import org.openscience.smsd.interfaces.IResults;
 
 /**

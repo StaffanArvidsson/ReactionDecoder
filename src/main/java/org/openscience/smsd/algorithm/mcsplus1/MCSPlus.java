@@ -24,6 +24,7 @@ package org.openscience.smsd.algorithm.mcsplus1;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -569,7 +570,8 @@ public class MCSPlus extends Filter {
     }
 
 //extract atom mapping from the clique vector and store it in vector clique_MAPPING_Local
-    private List<Integer> extract_clique_MAPPING(List<Integer> clique_vector) {
+    @SuppressWarnings("unused")
+	private List<Integer> extract_clique_MAPPING(List<Integer> clique_vector) {
 
         List<Integer> clique_MAPPING_Local = new ArrayList<>();
 
@@ -635,7 +637,7 @@ public class MCSPlus extends Filter {
                 }
 
             } else {
-                List<Integer> clique_MAPPING = extract_clique_MAPPING(clique_vector);
+//                List<Integer> clique_MAPPING = extract_clique_MAPPING(clique_vector);
                 extract_mapping(clique_vector);
             }
             max_Cliques_Set.pop();
@@ -647,7 +649,8 @@ public class MCSPlus extends Filter {
         return 0;
     }
 
-    private void clear() {
+    @SuppressWarnings("unused")
+	private void clear() {
         this.max_Cliques_Set.clear();
         this.comp_graph_nodes.clear();
         this.comp_graph_nodes_C_zero.clear();

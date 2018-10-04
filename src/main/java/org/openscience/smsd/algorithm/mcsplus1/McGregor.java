@@ -24,16 +24,18 @@
  */
 package org.openscience.smsd.algorithm.mcsplus1;
 
+import static org.openscience.smsd.algorithm.mcsplus1.BinaryTree.remove_tree_structure;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeMap;
+
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import static org.openscience.smsd.algorithm.mcsplus1.BinaryTree.remove_tree_structure;
 
 /**
  * Class which reports MCS solutions based on the McGregor algorithm published

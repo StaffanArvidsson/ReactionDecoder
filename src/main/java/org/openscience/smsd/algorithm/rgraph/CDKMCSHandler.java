@@ -22,17 +22,21 @@
  */
 package org.openscience.smsd.algorithm.rgraph;
 
+import static org.openscience.cdk.tools.LoggingToolFactory.createLoggingTool;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
+import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.smsd.AtomAtomMapping;
 import org.openscience.smsd.interfaces.IResults;
 
@@ -47,6 +51,8 @@ import org.openscience.smsd.interfaces.IResults;
  */
 public class CDKMCSHandler implements IResults {
 
+	private final static ILoggingTool LOGGER
+		= createLoggingTool(CDKMCSHandler.class);
 //    //~--- fields -------------------------------------------------------------
     private final IAtomContainer source;
     private final IAtomContainer target;
@@ -124,7 +130,7 @@ public class CDKMCSHandler implements IResults {
 
         } catch (CDKException e) {
             rmap = null;
-            System.err.println("WARNING: " + e.getMessage());
+            LOGGER.warn(e.getMessage());
         }
         return rmap.isTimeout();
     }
