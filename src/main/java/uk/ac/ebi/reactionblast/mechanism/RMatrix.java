@@ -27,8 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
-import static java.util.logging.Logger.getLogger;
+
 import static org.openscience.cdk.CDKConstants.ISAROMATIC;
 import static org.openscience.cdk.CDKConstants.ISINRING;
 import org.openscience.cdk.exception.CDKException;
@@ -51,7 +50,6 @@ public final class RMatrix extends EBIMatrix implements Serializable {
 
     private static final long serialVersionUID = 7057060562283378684L;
     private static final ILoggingTool LOGGER = createLoggingTool(RMatrix.class);
-    private static final Logger LOG = getLogger(RMatrix.class.getName());
 
     private BEMatrix reactantBEMatrix = null;
     private BEMatrix productBEMatrix = null;
@@ -102,7 +100,7 @@ public final class RMatrix extends EBIMatrix implements Serializable {
             reactantBEMatrix.setAromaticBond();
             productBEMatrix.setAromaticBond();
         } catch (CDKException ex) {
-            getLogger(RMatrix.class.getName()).log(SEVERE, null, ex);
+            LOGGER.error(SEVERE, null, ex);
         }
         ArrayList<IAtom> orderedBEMatrixAtomArray = new ArrayList<>();
 
@@ -338,7 +336,7 @@ public final class RMatrix extends EBIMatrix implements Serializable {
                 result.append("\t").append(this.getReactantBEMatrix().getAtom(i).getSymbol())
                         .append(this.getReactantBEMatrix().getAtom(i).getID());
             } catch (CDKException ex) {
-                getLogger(RMatrix.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
         }
         result.append(NEW_LINE);
@@ -348,7 +346,7 @@ public final class RMatrix extends EBIMatrix implements Serializable {
                 result.append("\t").append(this.getProductBEMatrix().getAtom(i).getSymbol())
                         .append(this.getProductBEMatrix().getAtom(i).getID());
             } catch (CDKException ex) {
-                getLogger(RMatrix.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
         }
         result.append(NEW_LINE);
@@ -364,7 +362,7 @@ public final class RMatrix extends EBIMatrix implements Serializable {
                     result.append(this.getProductBEMatrix().getAtom(i).getID());
                     result.append("\t");
                 } catch (CDKException ex) {
-                    getLogger(RMatrix.class.getName()).log(SEVERE, null, ex);
+                    LOGGER.error(SEVERE, null, ex);
                 }
             }
             for (int j = 0; j < this.getColumnDimension() - 1; j++) {

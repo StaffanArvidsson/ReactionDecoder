@@ -20,12 +20,10 @@ package uk.ac.ebi.reactionblast.mapping.helper;
 
 import static java.io.File.separator;
 import java.io.IOException;
-import static java.lang.System.err;
 import static java.lang.System.out;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
-import java.util.Map;
 import static java.util.logging.Level.SEVERE;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -33,7 +31,6 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.smsd.AtomAtomMapping;
 import org.openscience.smsd.Isomorphism;
 import org.openscience.smsd.interfaces.IAtomMapping;
-import uk.ac.ebi.reactionblast.mapping.algorithm.BaseGameTheory;
 import uk.ac.ebi.reactionblast.mapping.algorithm.Holder;
 import uk.ac.ebi.reactionblast.mapping.algorithm.checks.ChooseWinner;
 import uk.ac.ebi.reactionblast.mapping.container.ReactionContainer;
@@ -43,13 +40,18 @@ import uk.ac.ebi.reactionblast.tools.EBIMatrix;
 import uk.ac.ebi.reactionblast.tools.ImageGenerator;
 import static java.lang.System.getProperty;
 import static java.text.NumberFormat.getInstance;
-import static java.util.logging.Logger.getLogger;
+
+import org.openscience.cdk.tools.ILoggingTool;
+import static org.openscience.cdk.tools.LoggingToolFactory.createLoggingTool;
 
 /**
  * @contact Syed Asad Rahman, EMBL-EBI, Cambridge, UK.
  * @author Syed Asad Rahman <asad @ ebi.ac.uk>
  */
 public abstract class Debugger extends BasicDebugger {
+
+    private final static ILoggingTool LOGGER
+            = createLoggingTool(Debugger.class);
 
     /**
      * Prints reactant and product atom container in the matrix
@@ -81,7 +83,7 @@ public abstract class Debugger extends BasicDebugger {
             }
             out.println();
         } catch (IOException | CDKException | CloneNotSupportedException ex) {
-            getLogger(BaseGameTheory.class.getName()).log(SEVERE, null, ex);
+            LOGGER.error(SEVERE, null, ex);
         }
     }
 
@@ -117,8 +119,7 @@ public abstract class Debugger extends BasicDebugger {
                 out.println();
             }
         } catch (IOException | CDKException e) {
-            err.println("Parser Error");
-            e.printStackTrace();
+            LOGGER.debug("Parser Error" + e);
         }
         out.println();
     }
@@ -154,8 +155,7 @@ public abstract class Debugger extends BasicDebugger {
                 out.println();
             }
         } catch (IOException | CDKException e) {
-            err.println("Parser Error");
-            e.printStackTrace();
+            LOGGER.debug("Parser Error" + e);
         }
         out.println();
 
@@ -174,9 +174,9 @@ public abstract class Debugger extends BasicDebugger {
         boolean[][] FlagMatrix = winner.getFlagMatrix();
         out.println("Flag Matrix");
         out.print("\t\t");
-        for (String PdMap1 : PdMap) {
+        PdMap.forEach((PdMap1) -> {
             out.print("  " + PdMap1 + " ");
-        }
+        });
 
         out.println();
         for (int i = 0; i < EdMap.size(); i++) {
@@ -213,9 +213,9 @@ public abstract class Debugger extends BasicDebugger {
             out.println("Stereo Matrix");
             out.print("\t\t");
 
-            for (String PdMap1 : PdMap) {
+            PdMap.forEach((PdMap1) -> {
                 out.print(" " + PdMap1);
-            }
+            });
 
             out.println();
             double val;
@@ -234,8 +234,7 @@ public abstract class Debugger extends BasicDebugger {
             }
 
         } catch (Exception e) {
-            err.println("Parser Error");
-            e.printStackTrace();
+            LOGGER.debug("Parser Error" + e);
         }
 
         out.println();
@@ -260,9 +259,9 @@ public abstract class Debugger extends BasicDebugger {
             out.println("Fragment Matrix");
             out.print("\t\t");
 
-            for (String PdMap1 : PdMap) {
+            PdMap.forEach((PdMap1) -> {
                 out.print(" " + PdMap1);
-            }
+            });
 
             out.println();
             double val;
@@ -281,8 +280,7 @@ public abstract class Debugger extends BasicDebugger {
             }
 
         } catch (Exception e) {
-            err.println("Parser Error");
-            e.printStackTrace();
+            LOGGER.debug("Parser Error" + e);
         }
 
         out.println();
@@ -307,9 +305,9 @@ public abstract class Debugger extends BasicDebugger {
             out.println("Fragment Matrix");
             out.print("\t\t");
 
-            for (String PdMap1 : PdMap) {
+            PdMap.forEach((PdMap1) -> {
                 out.print(" " + PdMap1);
-            }
+            });
 
             out.println();
             double val;
@@ -326,8 +324,7 @@ public abstract class Debugger extends BasicDebugger {
             }
 
         } catch (Exception e) {
-            err.println("Parser Error");
-            e.printStackTrace();
+            LOGGER.debug("Parser Error" + e);
         }
 
         out.println();
@@ -352,9 +349,9 @@ public abstract class Debugger extends BasicDebugger {
             out.println("Energy Matrix");
             out.print("\t\t");
 
-            for (String PdMap1 : PdMap) {
+            PdMap.forEach((PdMap1) -> {
                 out.print("\t" + PdMap1);
-            }
+            });
 
             out.println();
             double val;
@@ -364,8 +361,7 @@ public abstract class Debugger extends BasicDebugger {
                 for (int j = 0; j
                         < PdMap.size(); j++) {
                     val = energyMatrixProfile.getValue(i, j);
-                    result
-                            = format.format(val);
+                    result = format.format(val);
                     out.print("\t" + result);
                 }
 
@@ -373,8 +369,7 @@ public abstract class Debugger extends BasicDebugger {
             }
 
         } catch (Exception e) {
-            err.println("Parser Error");
-            e.printStackTrace();
+            LOGGER.debug("Parser Error" + e);
         }
 
         out.println();
@@ -400,7 +395,7 @@ public abstract class Debugger extends BasicDebugger {
                     out.println("Final mapping Nr. " + ++count_final_sol
                             + " Size:" + final_solution_size);
 
-                    for (Map.Entry<IAtom, IAtom> mapping : final_solution.getMappingsByAtoms().entrySet()) {
+                    final_solution.getMappingsByAtoms().entrySet().forEach((mapping) -> {
                         IAtom eAtom = mapping.getKey();
                         IAtom pAtom = mapping.getValue();
 
@@ -408,7 +403,7 @@ public abstract class Debugger extends BasicDebugger {
 
                         out.println(eAtom.getSymbol() + " "
                                 + pAtom.getSymbol());
-                    }
+                    });
                     out.println("");
 
                     out.println("Stereo Match: " + comparison.getStereoScore(count_final_sol - 1));
@@ -419,7 +414,7 @@ public abstract class Debugger extends BasicDebugger {
                 out.println("");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.debug("Parser Error" + ex);
         }
     }
 
@@ -451,7 +446,7 @@ public abstract class Debugger extends BasicDebugger {
             try {
                 imageGenerator.addImages(query, target, label, mapping);
             } catch (Exception ex) {
-                getLogger(Debugger.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
             counter++;
         }

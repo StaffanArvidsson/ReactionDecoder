@@ -24,8 +24,7 @@ import static java.util.Collections.unmodifiableList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
-import static java.util.logging.Logger.getLogger;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -50,7 +49,6 @@ import uk.ac.ebi.reactionblast.tools.ValencyCalculator;
 public class BEMatrix extends EBIMatrix implements Serializable {
 
     private static final long serialVersionUID = -1420740601548197863L;
-    private static final Logger LOG = getLogger(BEMatrix.class.getName());
 
     private IAtomContainerSet myMoleculeSet = null;
     private List<IBond> bonds = null;
@@ -153,7 +151,7 @@ public class BEMatrix extends EBIMatrix implements Serializable {
          to accomodate unbalanced reactions
          */
         if (orderedAtomArray.size() != atomArray.size()) {
-//            System.err.println("The matrix has not been ordered, " + atomArray.size() + " !=" + orderedAtomArray.size());
+//            System.LOGGER.debug("The matrix has not been ordered, " + atomArray.size() + " !=" + orderedAtomArray.size());
             throw new CDKException("The matrix has not been ordered: " + atomArray.size() + " !=" + orderedAtomArray.size());
         }
         for (IAtom orderedAtom : orderedAtomArray) {

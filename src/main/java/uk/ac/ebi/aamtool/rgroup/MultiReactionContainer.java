@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Logger.getLogger;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IPseudoAtom;
@@ -139,7 +138,12 @@ class MultiReactionContainer {
         Set<String> r = new HashSet<>();
         SmilesGenerator sm = new SmilesGenerator(
                 SmiFlavor.Unique
-                | SmiFlavor.UseAromaticSymbols);
+                | SmiFlavor.UseAromaticSymbols
+                | SmiFlavor.Stereo
+                | SmiFlavor.StereoCisTrans
+                | SmiFlavor.StereoTetrahedral
+                | SmiFlavor.StereoTetrahedral
+                | SmiFlavor.StereoExTetrahedral);
         for (IAtomContainer a : reaction.getReactants().atomContainers()) {
             IAtomContainer ac = null;
             ac = removeHydrogensExceptSingleAndPreserveAtomID(a);
@@ -161,7 +165,7 @@ class MultiReactionContainer {
                     getAllFP().add(smiles);
 
                 } catch (Exception ex) {
-                    getLogger(ECRgroupFrequency.class.getName()).log(SEVERE, null, ex);
+                    LOGGER.error(SEVERE, null, ex);
                 }
             }
         }
@@ -187,7 +191,7 @@ class MultiReactionContainer {
                     getAllFP().add(smiles);
 
                 } catch (Exception ex) {
-                    getLogger(ECRgroupFrequency.class.getName()).log(SEVERE, null, ex);
+                    LOGGER.error(SEVERE, null, ex);
                 }
             }
         }

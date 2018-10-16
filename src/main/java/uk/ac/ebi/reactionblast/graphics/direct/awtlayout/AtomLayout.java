@@ -31,8 +31,7 @@ import static java.lang.String.valueOf;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
-import static java.util.logging.Logger.getLogger;
+
 import javax.vecmath.Point2d;
 import javax.vecmath.Point2f;
 import javax.vecmath.Vector2d;
@@ -75,8 +74,6 @@ import static uk.ac.ebi.reactionblast.stereo.IStereoAndConformation.Z;
  *
  */
 public class AtomLayout extends AbstractAWTLayout<IAtom> {
-
-    private static final Logger LOG = getLogger(AtomLayout.class.getName());
 
     private Font atomSymbolFont;
     private Font subscriptFont;
@@ -440,7 +437,7 @@ public class AtomLayout extends AbstractAWTLayout<IAtom> {
         if (pos != null) {
             labelManager.setUsedPosition(atom, pos);
         } else {
-            //                System.err.println("position null for ID " + atomID);
+            //                System.LOGGER.debug("position null for ID " + atomID);
         }
 
         g.setFont(atomSymbolFont);

@@ -20,7 +20,6 @@ package uk.ac.ebi.reactionblast.mapping.container;
 
 import java.io.IOException;
 import java.io.Serializable;
-import static java.lang.System.err;
 import static java.lang.System.out;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -35,8 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import static java.util.logging.Level.SEVERE;
-import java.util.logging.Logger;
-import static java.util.logging.Logger.getLogger;
+
 import static org.openscience.cdk.DefaultChemObjectBuilder.getInstance;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fingerprint.Fingerprinter;
@@ -49,12 +47,12 @@ import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import static org.openscience.cdk.smiles.SmilesGenerator.generic;
 import static org.openscience.cdk.smiles.SmilesGenerator.unique;
+import org.openscience.cdk.tools.ILoggingTool;
+import static org.openscience.cdk.tools.LoggingToolFactory.createLoggingTool;
 import org.openscience.smsd.Substructure;
-import uk.ac.ebi.reactionblast.containers.MolContainer;
 import uk.ac.ebi.reactionblast.fingerprints.FingerprintGenerator;
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IFingerprintGenerator;
 import static uk.ac.ebi.reactionblast.fingerprints.tools.Similarity.getTanimotoSimilarity;
-import uk.ac.ebi.reactionblast.mechanism.ReactionMechanismTool;
 import uk.ac.ebi.reactionblast.tools.AtomContainerSetComparator;
 import uk.ac.ebi.reactionblast.tools.BasicDebugger;
 import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.aromatizeMolecule;
@@ -71,7 +69,8 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
 
     private final static boolean DEBUG = false;
     private static final long serialVersionUID = 19869866609698L;
-    private static final Logger LOG = getLogger(CDKReactionBuilder.class.getName());
+    private final static ILoggingTool LOGGER
+            = createLoggingTool(CDKReactionBuilder.class);
     private final IReactionSet reactionSet;
     private int moleculeCounter = 0; //Counter to create Unique Molecules
     private final Map<String, Double> stoichiometryMap;
@@ -84,9 +83,9 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
      */
     public CDKReactionBuilder() throws Exception {
         reactionSet = getInstance().newInstance(IReactionSet.class);
-        stoichiometryMap = synchronizedMap(new HashMap<String, Double>());
-        fingerprintMap = synchronizedMap(new HashMap<String, BitSet>());
-        moleculeMap = synchronizedMap(new HashMap<String, IAtomContainer>());
+        stoichiometryMap = synchronizedMap(new HashMap<>());
+        fingerprintMap = synchronizedMap(new HashMap<>());
+        moleculeMap = synchronizedMap(new HashMap<>());
     }
 
     @Override
@@ -205,7 +204,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
             if (stoichiometryMap.containsKey(molWithH.getID())) {
                 tempStoic += stoichiometryMap.get(molWithH.getID());
                 stoichiometryMap.put(molWithH.getID(), tempStoic);
-//                System.err.println("St Map put: " + mol.getID() + ", St: " + tempStoic);
+//                System.LOGGER.debug("St Map put: " + mol.getID() + ", St: " + tempStoic);
             } else {
                 stoichiometryMap.put(molWithH.getID(), tempStoic);
                 _metabolites.add(molWithH);
@@ -216,7 +215,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
             Comparator<IAtomContainer> comparator = new AtomContainerSetComparator();
             sort(_metabolites, comparator);
         } catch (Exception ex) {
-            getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+            LOGGER.error(SEVERE, null, ex);
         }
 
         setReactantMolecule(standardizedReaction, _metabolites);
@@ -281,7 +280,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
             if (stoichiometryMap.containsKey(molWithH.getID())) {
                 tempStoic += stoichiometryMap.get(molWithH.getID());
                 stoichiometryMap.put(molWithH.getID(), tempStoic);
-//                System.err.println("St Map put: " + mol.getID() + ", St: " + tempStoic);
+//                System.LOGGER.debug("St Map put: " + mol.getID() + ", St: " + tempStoic);
             } else {
                 stoichiometryMap.put(molWithH.getID(), tempStoic);
                 _metabolites.add(molWithH);
@@ -292,7 +291,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
             Comparator<IAtomContainer> comparator = new AtomContainerSetComparator();
             sort(_metabolites, comparator);
         } catch (Exception ex) {
-            getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+            LOGGER.error(SEVERE, null, ex);
         }
 
         setProductMolecule(standardizedReaction, _metabolites);
@@ -333,7 +332,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
          */
         String molID = molecule.getID() == null || molecule.getID().isEmpty() ? null : molecule.getID();
         if (DEBUG) {
-            err.println("BEFORE");
+            LOGGER.debug("BEFORE");
             printAtoms(molecule);
         }
         try {
@@ -378,28 +377,28 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
                             moleculeMap.put(molID, molecule);
                         }
                     } else {
-                        err.println("error: Fingerprint can't be generated for this molecule " + SmilesGenerator.generic().create(molecule));
+                        LOGGER.debug("error: Fingerprint can't be generated for this molecule " + SmilesGenerator.generic().create(molecule));
                     }
                 } else {
-                    err.println("error: Mol file should contain atleast one atom! " + SmilesGenerator.generic().create(molecule));
+                    LOGGER.debug("error: Mol file should contain atleast one atom! " + SmilesGenerator.generic().create(molecule));
                 }
             } catch (CDKException ex) {
-                getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             } catch (Exception ex) {
-                getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
-//            System.err.println("After");
+//            System.LOGGER.debug("After");
 //            printAtoms(molecule);
             if (molecule.getID() == null) {
                 try {
                     throw new CDKException("Mol ID is NULL");
                 } catch (CDKException ex) {
-                    getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+                    LOGGER.error(SEVERE, null, ex);
                 }
             }
 
         } catch (Exception ex) {
-            getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+            LOGGER.error(SEVERE, null, ex);
         }
         if (DEBUG) {
             out.println("After Cleanup Mol ID is " + molID);
@@ -455,14 +454,10 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
      * @throws java.io.IOException
      * @return
      */
-    private boolean isValuePresent(BitSet value) throws IOException {
+    private boolean isValuePresent(BitSet value) throws IOException, Exception {
         for (BitSet bitset : fingerprintMap.values()) {
-            try {
-                if (getTanimotoSimilarity(value, bitset) == 1.0) {
-                    return true;
-                }
-            } catch (Exception ex) {
-                getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+            if (getTanimotoSimilarity(value, bitset) == 1.0) {
+                return true;
             }
         }
         return false;
@@ -484,10 +479,10 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
                     break;
                 }
             } catch (Exception ex) {
-                getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
         }
-        //System.err.println("Error: Unable to Find AtomContainer ID!!!");
+        //System.LOGGER.debug("Error: Unable to Find AtomContainer ID!!!");
         return Key;
     }
 
@@ -506,7 +501,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
                 return isIdentical(molecule, molFromContainer, true);
             }
         } catch (Exception ex) {
-            getLogger(MolContainer.class.getName()).log(SEVERE, null, ex);
+            LOGGER.error(SEVERE, null, ex);
         }
         return false;
     }
@@ -561,7 +556,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
             try {
                 out.println("Q=mol " + generic().create(queryMol));
             } catch (CDKException ex) {
-                getLogger(CDKReactionBuilder.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
         }
 
@@ -583,7 +578,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
             try {
                 out.println("T=mol " + generic().create(targetMol));
             } catch (CDKException ex) {
-                getLogger(ReactionMechanismTool.class.getName()).log(SEVERE, null, ex);
+                LOGGER.error(SEVERE, null, ex);
             }
         }
 
@@ -594,18 +589,16 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
 
         if (leftHandAtomCount != rightHandAtomCount) {
             if (DEBUG) {
-                err.println();
-                err.println("Number of atom(s) on the Left side " + leftHandAtomCount
+                LOGGER.warn("Number of atom(s) on the Left side " + leftHandAtomCount
                         + " =/= Number of atom(s) on the Right side " + rightHandAtomCount);
-                err.println(atomUniqueCounter1 + " =/= " + atomUniqueCounter2);
+                LOGGER.warn(atomUniqueCounter1 + " =/= " + atomUniqueCounter2);
             }
             return false;
         } else if (!atomUniqueCounter1.keySet().equals(atomUniqueCounter2.keySet())) {
             if (DEBUG) {
-                err.println();
-                err.println("Number of atom(s) on the Left side " + leftHandAtomCount
+                LOGGER.warn("Number of atom(s) on the Left side " + leftHandAtomCount
                         + " =/= Number of atom(s) on the Right side " + rightHandAtomCount);
-                err.println(atomUniqueCounter1 + " =/= " + atomUniqueCounter2);
+                LOGGER.warn(atomUniqueCounter1 + " =/= " + atomUniqueCounter2);
             }
             return false;
         }
@@ -619,7 +612,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
 
         return atomUniqueCounter1.keySet().equals(atomUniqueCounter2.keySet())
                 ? queryMol.getElectronContainerCount() == targetMol.getElectronContainerCount()
-                        ? isSubgraphIdentical(queryMol, targetMol, removeHydrogen) : false : false;
+                ? isSubgraphIdentical(queryMol, targetMol, removeHydrogen) : false : false;
     }
 
     private boolean isSubgraphIdentical(IAtomContainer qMol, IAtomContainer tMol, boolean removeHydrogen) throws CDKException, IOException, CloneNotSupportedException {
