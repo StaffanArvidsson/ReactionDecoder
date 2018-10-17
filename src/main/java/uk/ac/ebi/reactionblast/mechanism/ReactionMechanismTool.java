@@ -18,53 +18,53 @@
  */
 package uk.ac.ebi.reactionblast.mechanism;
 
-import java.io.Serializable;
 import static java.lang.Integer.MIN_VALUE;
+import static java.lang.Integer.parseInt;
+import static java.lang.Math.abs;
 import static java.lang.System.gc;
-import static java.lang.System.out;
-import java.util.ArrayList;
-import java.util.Collection;
+import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableCollection;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import static java.util.logging.Level.SEVERE;
 import static org.openscience.cdk.CDKConstants.ATOM_ATOM_MAPPING;
 import static org.openscience.cdk.CDKConstants.MAPPED;
-import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IAtomContainerSet;
 import static org.openscience.cdk.interfaces.IBond.Order.DOUBLE;
 import static org.openscience.cdk.interfaces.IBond.Order.QUADRUPLE;
 import static org.openscience.cdk.interfaces.IBond.Order.SINGLE;
 import static org.openscience.cdk.interfaces.IBond.Order.TRIPLE;
-import org.openscience.cdk.interfaces.IMapping;
-import org.openscience.cdk.interfaces.IReaction;
-import org.openscience.cdk.smiles.SmilesGenerator;
 import static org.openscience.cdk.smiles.SmilesGenerator.generic;
-import org.openscience.cdk.tools.ILoggingTool;
 import static org.openscience.cdk.tools.LoggingToolFactory.createLoggingTool;
+import static org.openscience.cdk.tools.manipulator.AtomContainerManipulator.getAtomArray;
 import static org.openscience.cdk.tools.manipulator.AtomContainerSetManipulator.getAllAtomContainers;
 import static org.openscience.cdk.tools.manipulator.AtomContainerSetManipulator.getAtomCount;
-import org.openscience.smsd.tools.BondEnergies;
 import static org.openscience.smsd.tools.BondEnergies.getInstance;
+import static uk.ac.ebi.reactionblast.mapping.interfaces.IMappingAlgorithm.USER_DEFINED;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.interfaces.IAtom;
+import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomContainerSet;
+import org.openscience.cdk.interfaces.IMapping;
+import org.openscience.cdk.interfaces.IReaction;
+import org.openscience.cdk.smiles.SmiFlavor;
+import org.openscience.cdk.smiles.SmilesGenerator;
+import org.openscience.cdk.tools.ILoggingTool;
+import org.openscience.smsd.tools.BondEnergies;
+
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IFeature;
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IPatternFingerprinter;
 import uk.ac.ebi.reactionblast.interfaces.IStandardizer;
 import uk.ac.ebi.reactionblast.mapping.CallableAtomMappingTool;
 import uk.ac.ebi.reactionblast.mapping.Reactor;
 import uk.ac.ebi.reactionblast.mapping.interfaces.IMappingAlgorithm;
-import static uk.ac.ebi.reactionblast.mapping.interfaces.IMappingAlgorithm.USER_DEFINED;
-import uk.ac.ebi.reactionblast.tools.StandardizeReaction;
-import static java.lang.Integer.parseInt;
-import static java.lang.Math.abs;
-import static java.lang.System.getProperty;
-import static java.util.Collections.synchronizedList;
-
-import org.openscience.cdk.smiles.SmiFlavor;
-import static org.openscience.cdk.tools.manipulator.AtomContainerManipulator.getAtomArray;
 import uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator;
+import uk.ac.ebi.reactionblast.tools.StandardizeReaction;
 
 /**
  *
@@ -73,6 +73,7 @@ import uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator;
  */
 public class ReactionMechanismTool implements Serializable {
 
+	private final static String NEW_LINE = System.getProperty("line.separator");
     private final static boolean DEBUG = false;
     private final static ILoggingTool LOGGER
             = createLoggingTool(ReactionMechanismTool.class);
@@ -158,8 +159,7 @@ public class ReactionMechanismTool implements Serializable {
                 boolean selected = isMappingSolutionAcceptable(null, USER_DEFINED, reaction, generate2D, generate3D);
                 LOGGER.info("is solution: " + USER_DEFINED + " selected: " + selected);
             } catch (Exception e) {
-                String ls = getProperty("line.separator");
-                throw new CDKException(ls + "ERROR: Unable to calculate bond changes: " + e.getMessage());
+                throw new CDKException(NEW_LINE + "ERROR: Unable to calculate bond changes: " + e.getMessage());
             }
         } else {
             try {
@@ -182,7 +182,7 @@ public class ReactionMechanismTool implements Serializable {
                     Reactor reactor = solutions.get(algorithm);
 
                     if (reactor == null) {
-                        System.out.println("Reactor is NULL");
+                        LOGGER.debug("Reactor is NULL");
                         return;
                     }
 
@@ -191,7 +191,7 @@ public class ReactionMechanismTool implements Serializable {
                         SmilesGenerator withAtomClasses = new SmilesGenerator(
                                 SmiFlavor.Unique
                                 | SmiFlavor.AtomAtomMap);
-                        out.println("reaction mapped " + withAtomClasses.create(reactor.getReactionWithAtomAtomMapping()));
+                        LOGGER.debug("reaction mapped " + withAtomClasses.create(reactor.getReactionWithAtomAtomMapping()));
                     }
 
                     int atomCountR = getNonHydrogenMappingAtomCount(reactor.getReactionWithAtomAtomMapping().getReactants());
@@ -199,7 +199,6 @@ public class ReactionMechanismTool implements Serializable {
 
                     if (atomCountR != atomCountP) {
                         LOGGER.warn("ERROR in Mapping " + reactor.toString());
-                        String newline = getProperty("line.separator");
                         LOGGER.warn("Unmapped atoms present in this reaction" + "(" + algorithm + ") algorithm.");
 //                        throw new AssertionError(newline + "Unmapped atoms present in the reaction mapped by AAM "
 //                                + "(" + algorithm + ") algorithm." + newline);
@@ -209,10 +208,9 @@ public class ReactionMechanismTool implements Serializable {
                 }
                 gc();
             } catch (Exception e) {
-                String ls = getProperty("line.separator");
-                throw new Exception(ls + "ERROR: Unable to calculate bond changes: " + e.getMessage());
+                throw new Exception(NEW_LINE + "ERROR: Unable to calculate bond changes: " + e.getMessage());
             }
-//            System.out.println(this.getMappingDescription());
+//            System.LOGGER.debug(this.getMappingDescription());
         }
     }
 
@@ -237,7 +235,7 @@ public class ReactionMechanismTool implements Serializable {
             }
             if (DEBUG) {
                 try {
-                    out.println("Q=mol " + generic().create(q));
+                	LOGGER.debug("Q=mol " + generic().create(q));
                 } catch (CDKException ex) {
                     LOGGER.error(SEVERE, null, ex);
                 }
@@ -260,7 +258,7 @@ public class ReactionMechanismTool implements Serializable {
             }
             if (DEBUG) {
                 try {
-                    out.println("T=mol " + generic().create(t));
+                	LOGGER.debug("T=mol " + generic().create(t));
                 } catch (CDKException ex) {
                     LOGGER.error(SEVERE, null, ex);
                 }
@@ -268,8 +266,8 @@ public class ReactionMechanismTool implements Serializable {
         }
 
         if (DEBUG) {
-            out.println("atomUniqueCounter1 " + leftHandAtomCount);
-            out.println("atomUniqueCounter2 " + rightHandAtomCount);
+            LOGGER.debug("atomUniqueCounter1 " + leftHandAtomCount);
+            LOGGER.debug("atomUniqueCounter2 " + rightHandAtomCount);
         }
 
         if (leftHandAtomCount != rightHandAtomCount) {
@@ -285,8 +283,8 @@ public class ReactionMechanismTool implements Serializable {
         }
 
         if (DEBUG) {
-            out.println("atomUniqueCounter1 " + atomUniqueCounter1);
-            out.println("atomUniqueCounter2 " + atomUniqueCounter2);
+            LOGGER.debug("atomUniqueCounter1 " + atomUniqueCounter1);
+            LOGGER.debug("atomUniqueCounter2 " + atomUniqueCounter2);
         }
         return atomUniqueCounter1.keySet().equals(atomUniqueCounter2.keySet());
     }
@@ -384,8 +382,7 @@ public class ReactionMechanismTool implements Serializable {
                 this.allSolutions.add(mappingSolution);
             }
         } catch (Exception e) {
-            String ls = getProperty("line.separator");
-            throw new Exception(ls + "ERROR: Unable to calculate bond changes: " + e.getMessage());
+            throw new Exception(NEW_LINE + "ERROR: Unable to calculate bond changes: " + e.getMessage());
         }
         return chosen;
     }
@@ -405,19 +402,19 @@ public class ReactionMechanismTool implements Serializable {
         if (DEBUG) {
 
             if (this.selectedMapping != null) {
-                out.println("\n selectedMapping.getAlgorithmID().description() " + selectedMapping.getAlgorithmID().description());
-                out.println(" selectedMapping.getTotalBondChanges() " + selectedMapping.getTotalBondChanges());
-                out.println(" selectedMapping.getSmallestFragmentCount() " + selectedMapping.getSmallestFragmentCount());
-                out.println(" selectedMapping.getBondEnergyChange() " + selectedMapping.getBondEnergySum());
-                out.println(" selectedMapping.getTotalFragmentChanges() " + selectedMapping.getTotalFragmentChanges());
-                out.println(" Total Carbon Bond Changes " + selectedMapping.getTotalCarbonBondChanges());
+                LOGGER.debug("\n selectedMapping.getAlgorithmID().description() " + selectedMapping.getAlgorithmID().description());
+                LOGGER.debug(" selectedMapping.getTotalBondChanges() " + selectedMapping.getTotalBondChanges());
+                LOGGER.debug(" selectedMapping.getSmallestFragmentCount() " + selectedMapping.getSmallestFragmentCount());
+                LOGGER.debug(" selectedMapping.getBondEnergyChange() " + selectedMapping.getBondEnergySum());
+                LOGGER.debug(" selectedMapping.getTotalFragmentChanges() " + selectedMapping.getTotalFragmentChanges());
+                LOGGER.debug(" Total Carbon Bond Changes " + selectedMapping.getTotalCarbonBondChanges());
             }
-            out.println("\n ms.getAlgorithmID().description() " + ms.getAlgorithmID().description());
-            out.println(" ms.getTotalBondChanges() " + ms.getTotalBondChanges());
-            out.println(" ms.getSmallestFragmentCount() " + ms.getSmallestFragmentCount());
-            out.println(" ms.getBondEnergyChange() " + ms.getBondEnergySum());
-            out.println(" ms.getTotalFragmentChanges() " + ms.getTotalFragmentChanges());
-            out.println(" Total Carbon Bond Changes " + ms.getTotalCarbonBondChanges());
+            LOGGER.debug("\n ms.getAlgorithmID().description() " + ms.getAlgorithmID().description());
+            LOGGER.debug(" ms.getTotalBondChanges() " + ms.getTotalBondChanges());
+            LOGGER.debug(" ms.getSmallestFragmentCount() " + ms.getSmallestFragmentCount());
+            LOGGER.debug(" ms.getBondEnergyChange() " + ms.getBondEnergySum());
+            LOGGER.debug(" ms.getTotalFragmentChanges() " + ms.getTotalFragmentChanges());
+            LOGGER.debug(" Total Carbon Bond Changes " + ms.getTotalCarbonBondChanges());
         }
 
         /*
@@ -436,7 +433,7 @@ public class ReactionMechanismTool implements Serializable {
         if (this.selectedMapping == null) {
             LOGGER.info("Condition Default " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition Default");
+                LOGGER.debug("CASE: Condition Default");
             }
             return true;
         } else if (ms.getBondEnergySum() == 0.
@@ -445,7 +442,7 @@ public class ReactionMechanismTool implements Serializable {
                 && this.selectedMapping.getTotalStereoChanges() >= ms.getTotalStereoChanges()) {
             LOGGER.info("Condition 1 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 1");
+                LOGGER.debug("CASE: Condition 1");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() > ms.getTotalBondChanges()
@@ -455,7 +452,7 @@ public class ReactionMechanismTool implements Serializable {
                 || this.selectedMapping.getBondEnergySum() > ms.getBondEnergySum())) {
             LOGGER.info("Condition 2 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 2");
+                LOGGER.debug("CASE: Condition 2");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() > ms.getTotalBondChanges()
@@ -463,7 +460,7 @@ public class ReactionMechanismTool implements Serializable {
                 && ms.getTotalFragmentChanges() > 0) {
             LOGGER.info("Condition 3 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 3");
+                LOGGER.debug("CASE: Condition 3");
             }
             return true;
         } else if (this.selectedMapping.getTotalFragmentChanges() >= ms.getTotalFragmentChanges()
@@ -473,14 +470,14 @@ public class ReactionMechanismTool implements Serializable {
             /* Example reaction R05069*/
             LOGGER.info("Condition 4 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 4");
+                LOGGER.debug("CASE: Condition 4");
             }
             return true;
         } else if (this.selectedMapping.getTotalFragmentChanges() > ms.getTotalFragmentChanges()
                 && this.selectedMapping.getSmallestFragmentCount() > ms.getSmallestFragmentCount()) {
             LOGGER.info("Condition 5 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 5");
+                LOGGER.debug("CASE: Condition 5");
             }
             return true;
         } else if (this.selectedMapping.getTotalFragmentChanges() == ms.getTotalFragmentChanges()
@@ -489,14 +486,14 @@ public class ReactionMechanismTool implements Serializable {
                 && this.selectedMapping.getTotalCarbonBondChanges() >= ms.getTotalCarbonBondChanges()) {
             LOGGER.info("Condition 6 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 6");
+                LOGGER.debug("CASE: Condition 6");
             }
             return true;
         } else if (this.selectedMapping.getTotalFragmentChanges() > ms.getTotalFragmentChanges()
                 && this.selectedMapping.getBondEnergySum() > ms.getBondEnergySum()) {
             LOGGER.info("Condition 7 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 7");
+                LOGGER.debug("CASE: Condition 7");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() == ms.getTotalBondChanges()
@@ -504,7 +501,7 @@ public class ReactionMechanismTool implements Serializable {
             /* && this.selectedMapping.getBondEnergyChange() > ms.getBondEnergyChange()) {*/
             LOGGER.info("Condition 8 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 8");
+                LOGGER.debug("CASE: Condition 8");
             }
             return true;
         } else if (this.selectedMapping.getTotalFragmentChanges() == ms.getTotalFragmentChanges()
@@ -512,7 +509,7 @@ public class ReactionMechanismTool implements Serializable {
                 && this.selectedMapping.getTotalBondChanges() > ms.getTotalBondChanges()) {
             LOGGER.info("Condition 9 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 9");
+                LOGGER.debug("CASE: Condition 9");
             }
             return true;
         } else if (this.selectedMapping.getBondEnergySum() == ms.getBondEnergySum()
@@ -520,14 +517,14 @@ public class ReactionMechanismTool implements Serializable {
                 && this.selectedMapping.getTotalStereoChanges() > ms.getTotalStereoChanges()) {
             LOGGER.info("Condition 10 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 10");
+                LOGGER.debug("CASE: Condition 10");
             }
             return true;
         } else if (this.selectedMapping.getBondEnergySum() > ms.getBondEnergySum()
                 && this.selectedMapping.getTotalCarbonBondChanges() > ms.getTotalCarbonBondChanges()) {
             LOGGER.info("Condition 11 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 11");
+                LOGGER.debug("CASE: Condition 11");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() < ms.getTotalBondChanges()
@@ -538,7 +535,7 @@ public class ReactionMechanismTool implements Serializable {
             /*This condition is for reactions like: R00652 N Vs O exchange*/
             LOGGER.info("Condition 12 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 12");
+                LOGGER.debug("CASE: Condition 12");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() > ms.getTotalBondChanges()
@@ -547,7 +544,7 @@ public class ReactionMechanismTool implements Serializable {
             /*This condition is for reactions like: Rhea 22881 N Vs O exchange*/
             LOGGER.info("Condition 13 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 13");
+                LOGGER.debug("CASE: Condition 13");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() == ms.getTotalBondChanges()
@@ -558,7 +555,7 @@ public class ReactionMechanismTool implements Serializable {
             **/
             LOGGER.info("Condition 14 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 14");
+                LOGGER.debug("CASE: Condition 14");
             }
             return true;
         } else if (this.selectedMapping.getTotalBondChanges() == ms.getTotalBondChanges()
@@ -569,13 +566,13 @@ public class ReactionMechanismTool implements Serializable {
             **/
             LOGGER.info("Condition 15 " + ms.getAlgorithmID().description());
             if (DEBUG) {
-                out.println("CASE: Condition 15");
+                LOGGER.debug("CASE: Condition 15");
             }
             return true;
         }
 
         if (DEBUG) {
-            out.println("CASE: FAILED");
+            LOGGER.debug("CASE: FAILED");
         }
         return false;
     }
@@ -604,7 +601,7 @@ public class ReactionMechanismTool implements Serializable {
                 double val = feature.getWeight();
                 String key = feature.getPattern();
                 if (val > 0) {
-//                    System.out.println("BOND BROKEN/FORMED: " + key + " : " + val);
+//                    System.LOGGER.debug("BOND BROKEN/FORMED: " + key + " : " + val);
                     if (key.contains("-") || key.contains("%") || key.contains("@")) {
                         String[] temp = null;
                         if (key.contains("-")) {
