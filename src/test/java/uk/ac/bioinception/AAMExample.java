@@ -10,6 +10,7 @@ import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
+
 import uk.ac.ebi.reactionblast.mechanism.MappingSolution;
 import uk.ac.ebi.reactionblast.mechanism.ReactionMechanismTool;
 import uk.ac.ebi.reactionblast.tools.StandardizeReaction;
@@ -60,5 +61,6 @@ public class AAMExample {
         IReaction reaction = s.getReaction();//Fetch Mapped Reaction
         return reaction;
     }
+    
 
 }

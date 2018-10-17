@@ -25,6 +25,7 @@ package org.openscience.smsd;
 
 import java.io.Serializable;
 import java.util.logging.Level;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
