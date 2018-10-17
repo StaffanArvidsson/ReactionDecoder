@@ -4,11 +4,13 @@
 package uk.ac.bioinception;
 
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.smiles.SmilesParser;
+
+import uk.ac.ebi.GlobalSettings;
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IPatternFingerprinter;
 import uk.ac.ebi.reactionblast.mechanism.ReactionMechanismTool;
 import uk.ac.ebi.reactionblast.tools.StandardizeReaction;
@@ -24,7 +26,7 @@ public class SMILES2AAMTest extends TestUtility {
     public void TestRHEA10006() throws Exception {
 
         String reactionSM = "N#CSCC1=CC=CC=C1>>S=C=NCC1=CC=CC=C1";
-        SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser smilesParser = new SmilesParser(GlobalSettings.BUILDER);
         IReaction parseReactionSmiles = smilesParser.parseReactionSmiles(reactionSM);
         ReactionMechanismTool testReactions = performAtomAtomMapping(parseReactionSmiles, "RHEA10006");
         IPatternFingerprinter formedCleavedWFingerprint = testReactions
@@ -47,7 +49,7 @@ public class SMILES2AAMTest extends TestUtility {
                 + "O=C=O."
                 + "[H]O[H]."
                 + "NC(=O)C1=CC=C[N+](=C1)[C@@H]1O[C@H](COP([O-])(=O)OP([O-])(=O)OC[C@H]2O[C@H]([C@H](O)[C@@H]2O)N2C=NC3=C2N=CN=C3N)[C@@H](O)[C@H]1O";
-        SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser smilesParser = new SmilesParser(GlobalSettings.BUILDER);
         IReaction parseReactionSmiles = smilesParser.parseReactionSmiles(reactionSM);
         ReactionMechanismTool testReactions = performAtomAtomMapping(parseReactionSmiles, "RHEA11004");
         IPatternFingerprinter formedCleavedWFingerprint = testReactions

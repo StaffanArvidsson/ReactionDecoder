@@ -27,14 +27,21 @@
  */
 package org.openscience.smsd;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-
 import static org.openscience.cdk.CDKConstants.ATOM_ATOM_MAPPING;
 import static org.openscience.cdk.CDKConstants.MAPPED;
-import org.openscience.cdk.DefaultChemObjectBuilder;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.logging.Level;
+
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
@@ -47,6 +54,8 @@ import org.openscience.cdk.tools.CDKHydrogenAdder;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
 import org.openscience.smsd.tools.ExtAtomContainerManipulator;
+
+import uk.ac.ebi.GlobalSettings;
 
 /**
  * Holds atom-atom mappings information between source and target molecules
@@ -141,7 +150,7 @@ public final class AtomAtomMapping implements Serializable {
     public synchronized String toString() {
         StringBuilder s = new StringBuilder();
         try {
-            IReaction reaction = DefaultChemObjectBuilder.getInstance().newInstance(IReaction.class);
+            IReaction reaction = GlobalSettings.BUILDER.newInstance(IReaction.class);
             reaction.addReactant(getQuery().clone(), 1.0);
             reaction.addProduct(getTarget().clone(), 1.0);
 

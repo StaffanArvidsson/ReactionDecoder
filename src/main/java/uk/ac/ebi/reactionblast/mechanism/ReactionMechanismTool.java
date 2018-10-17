@@ -87,9 +87,9 @@ public class ReactionMechanismTool implements Serializable {
      * @param forcedMapping force re-mapping of the reactions
      * @param generate2D deduce stereo on 2D
      * @param generate3D deduce stereo on 3D
-     * @throws Exception
+     * @throws CDKException 
      */
-    public ReactionMechanismTool(IReaction reaction, boolean forcedMapping, boolean generate2D, boolean generate3D) throws Exception {
+    public ReactionMechanismTool(IReaction reaction, boolean forcedMapping, boolean generate2D, boolean generate3D) throws CDKException { //throws Exception {
         this(reaction, forcedMapping, generate2D, generate3D, new StandardizeReaction());
     }
 
@@ -101,11 +101,9 @@ public class ReactionMechanismTool implements Serializable {
      * @param generate3D deduce stereo on 3D
      * @param standardizer
      * @throws CDKException
-     * @throws AssertionError
-     * @throws Exception
      */
     public ReactionMechanismTool(IReaction reaction, boolean forcedMapping,
-            boolean generate2D, boolean generate3D, IStandardizer standardizer) throws CDKException, AssertionError, Exception {
+            boolean generate2D, boolean generate3D, IStandardizer standardizer) throws CDKException {
         this.allSolutions = synchronizedList(new ArrayList<>());
         this.selectedMapping = null;
 
@@ -208,7 +206,7 @@ public class ReactionMechanismTool implements Serializable {
                 }
                 gc();
             } catch (Exception e) {
-                throw new Exception(NEW_LINE + "ERROR: Unable to calculate bond changes: " + e.getMessage());
+                throw new CDKException(NEW_LINE + "ERROR: Unable to calculate bond changes: " + e.getMessage());
             }
 //            System.LOGGER.debug(this.getMappingDescription());
         }

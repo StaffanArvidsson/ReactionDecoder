@@ -38,7 +38,7 @@ import javax.vecmath.Vector2d;
 import org.openscience.cdk.AtomContainerSet;
 import static org.openscience.cdk.CDKConstants.ATOM_ATOM_MAPPING;
 import static org.openscience.cdk.CDKConstants.TITLE;
-import static org.openscience.cdk.DefaultChemObjectBuilder.getInstance;
+//import static org.openscience.cdk.DefaultChemObjectBuilder.getInstance;
 import org.openscience.cdk.Reaction;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtom;
@@ -49,9 +49,12 @@ import org.openscience.cdk.interfaces.IMapping;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.layout.StructureDiagramGenerator;
+
 import static org.openscience.cdk.tools.CDKHydrogenAdder.getInstance;
 import org.openscience.cdk.tools.LonePairElectronChecker;
 import static org.openscience.cdk.tools.manipulator.AtomContainerManipulator.percieveAtomTypesAndConfigureAtoms;
+
+import uk.ac.ebi.GlobalSettings;
 import uk.ac.ebi.reactionblast.graphics.direct.DirectMoleculeDrawer;
 import uk.ac.ebi.reactionblast.graphics.direct.layout.SingleMoleculeLayout;
 import uk.ac.ebi.reactionblast.graphics.direct.layout.ZoomToFitLayout;
@@ -197,7 +200,7 @@ public class TestUtility {
      */
     protected void addImplicitHydrogens(IAtomContainer atomContainer) {
         try {
-            getInstance(getInstance()).addImplicitHydrogens(atomContainer);
+            getInstance(GlobalSettings.BUILDER).addImplicitHydrogens(atomContainer);
         } catch (CDKException e) {
             // TODO Auto-generated catch block
             LOGGER.error(SEVERE, null, e);

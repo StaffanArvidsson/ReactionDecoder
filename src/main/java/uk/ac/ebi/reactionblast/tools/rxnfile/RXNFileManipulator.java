@@ -10,41 +10,43 @@
  */
 package uk.ac.ebi.reactionblast.tools.rxnfile;
 
-import java.io.File;
-import java.io.IOException;
 import static java.lang.Integer.parseInt;
 import static java.lang.System.out;
+import static java.util.logging.Level.SEVERE;
+import static java.util.regex.Pattern.compile;
+import static org.openscience.cdk.interfaces.IReaction.Direction.BACKWARD;
+import static org.openscience.cdk.interfaces.IReaction.Direction.BIDIRECTIONAL;
+import static org.openscience.cdk.interfaces.IReaction.Direction.FORWARD;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.aromatizeMolecule;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.removeHydrogensExceptSingleAndPreserveAtomID;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import static java.util.logging.Level.SEVERE;
-
 import java.util.regex.Pattern;
-import static java.util.regex.Pattern.compile;
+
 import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fingerprint.Fingerprinter;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IReaction;
-import static org.openscience.cdk.interfaces.IReaction.Direction.BACKWARD;
-import static org.openscience.cdk.interfaces.IReaction.Direction.BIDIRECTIONAL;
-import static org.openscience.cdk.interfaces.IReaction.Direction.FORWARD;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
+
+import uk.ac.ebi.GlobalSettings;
 import uk.ac.ebi.reactionblast.containers.FingerPrintContainer;
 import uk.ac.ebi.reactionblast.containers.MolContainer;
 import uk.ac.ebi.reactionblast.fingerprints.FingerprintGenerator;
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IFingerprintGenerator;
 import uk.ac.ebi.reactionblast.tools.BasicDebugger;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.aromatizeMolecule;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.removeHydrogensExceptSingleAndPreserveAtomID;
 
 /**
  *
@@ -87,7 +89,7 @@ public class RXNFileManipulator extends BasicDebugger {
      */
     public IReaction process(File rxnFile) throws Exception {
 
-        IReaction cleanedReaction = DefaultChemObjectBuilder.getInstance().newInstance(IReaction.class);
+        IReaction cleanedReaction = GlobalSettings.BUILDER.newInstance(IReaction.class);
         Map<String, Double> _Stoichiometry = new HashMap<>();
         Set<IAtomContainer> _Metabolites = new HashSet<>();
         String FileName = rxnFile.getName();
@@ -186,7 +188,7 @@ public class RXNFileManipulator extends BasicDebugger {
      */
     public IReaction processMACiE(File rxnFile) throws Exception {
 
-        IReaction IR = DefaultChemObjectBuilder.getInstance().newInstance(IReaction.class);
+        IReaction IR = GlobalSettings.BUILDER.newInstance(IReaction.class);
         Map<String, Double> _Stoichiometry = new HashMap<>();
         Set<IAtomContainer> _Metabolites = new HashSet<>();
         String FileName = rxnFile.getName();
@@ -282,7 +284,7 @@ public class RXNFileManipulator extends BasicDebugger {
      */
     public IReaction processIntEnz(File rxnFile) throws Exception {
 
-        IReaction IR = DefaultChemObjectBuilder.getInstance().newInstance(IReaction.class);
+        IReaction IR = GlobalSettings.BUILDER.newInstance(IReaction.class);
         Map<String, Double> _Stoichiometry = new HashMap<>();
         Set<IAtomContainer> _Metabolites = new HashSet<>();
         String FileName = rxnFile.getName();

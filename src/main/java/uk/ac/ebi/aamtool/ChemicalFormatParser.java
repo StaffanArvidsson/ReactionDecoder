@@ -18,35 +18,37 @@
  */
 package uk.ac.ebi.aamtool;
 
+import static java.lang.String.format;
+import static java.lang.System.exit;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+import static org.openscience.cdk.io.IChemObjectReader.Mode.RELAXED;
+import static uk.ac.ebi.aamtool.Annotator.NEW_LINE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import static java.lang.String.format;
-import static java.lang.System.exit;
 import java.util.ArrayList;
 import java.util.List;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
+
 import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.DefaultChemObjectBuilder;
-import static org.openscience.cdk.DefaultChemObjectBuilder.getInstance;
 import org.openscience.cdk.Reaction;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.exception.InvalidSmilesException;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.io.CMLReader;
-import static org.openscience.cdk.io.IChemObjectReader.Mode.RELAXED;
 import org.openscience.cdk.io.Mol2Reader;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
 import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.ILoggingTool;
 import org.openscience.cdk.tools.LoggingToolFactory;
-import static uk.ac.ebi.aamtool.Annotator.NEW_LINE;
+
+import uk.ac.ebi.GlobalSettings;
 import uk.ac.ebi.reactionblast.tools.rxnfile.MDLRXNV2000Reader;
 import uk.ac.ebi.reactionblast.tools.rxnfile.MDLV2000Reader;
 
@@ -124,7 +126,7 @@ class ChemicalFormatParser {
                 | SmiFlavor.StereoTetrahedral
                 | SmiFlavor.StereoExTetrahedral);
         String createSmilesFromReaction = sg.create(r);
-        final SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        final SmilesParser smilesParser = new SmilesParser(GlobalSettings.BUILDER);
         IReaction parseReactionSmiles = smilesParser.parseReactionSmiles(createSmilesFromReaction);
         parseReactionSmiles.setID(r.getID());
         for (int i = 0; i < r.getReactantCount(); i++) {
@@ -137,7 +139,7 @@ class ChemicalFormatParser {
     }
 
     protected List<IReaction> parseReactionSMILES(String reactionSmiles) {
-        SmilesParser sp = new SmilesParser(getInstance());
+        SmilesParser sp = new SmilesParser(GlobalSettings.BUILDER);
         String[] smiles = reactionSmiles.split("\\s+");
         List<IReaction> reactions = new ArrayList<>();
         int smilesIndex = 1;
@@ -164,11 +166,11 @@ class ChemicalFormatParser {
     }
 
     protected IReaction parseSMILES(String smiles) {
-        SmilesParser sp = new SmilesParser(getInstance());
+        SmilesParser sp = new SmilesParser(GlobalSettings.BUILDER);
         try {
             IAtomContainer mol = sp.parseSmiles(smiles);
             try {
-                IReaction parseReactionSmiles = getInstance().newInstance(IReaction.class);
+                IReaction parseReactionSmiles = GlobalSettings.BUILDER.newInstance(IReaction.class);
                 parseReactionSmiles.addReactant(mol, 1.0);
                 LOGGER.error(INFO, "Annotating Reaction " + "smiles");
                 parseReactionSmiles.setID("smiles");

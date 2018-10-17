@@ -82,7 +82,6 @@ public class EBIArrayList<E> extends ArrayList<E> {
      *
      * @param c
      */
-    @SuppressWarnings("unchecked")
     public EBIArrayList(Collection<? extends E> c) {
         super(c);
     }

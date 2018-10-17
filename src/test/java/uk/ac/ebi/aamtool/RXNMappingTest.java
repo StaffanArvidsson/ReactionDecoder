@@ -18,24 +18,25 @@
  */
 package uk.ac.ebi.aamtool;
 
-import uk.ac.ebi.reactionblast.tools.MappingUtility;
+import static java.util.logging.Logger.getLogger;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static uk.ac.ebi.reactionblast.tools.ReactionSimilarityTool.getSimilarity;
+
 import java.io.FileNotFoundException;
 import java.util.logging.Logger;
+
 import org.junit.Test;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.smiles.SmilesParser;
+
+import uk.ac.ebi.GlobalSettings;
 import uk.ac.ebi.reactionblast.fingerprints.Feature;
 import uk.ac.ebi.reactionblast.fingerprints.PatternFingerprinter;
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IPatternFingerprinter;
 import uk.ac.ebi.reactionblast.mechanism.BondChangeCalculator;
 import uk.ac.ebi.reactionblast.mechanism.ReactionMechanismTool;
-import static java.util.logging.Logger.getLogger;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static uk.ac.ebi.reactionblast.tools.ReactionSimilarityTool.getSimilarity;
-import static uk.ac.ebi.reactionblast.tools.TestUtility.BUG_RXN_DIR;
-import static uk.ac.ebi.reactionblast.tools.TestUtility.KEGG_RXN_DIR;
+import uk.ac.ebi.reactionblast.tools.MappingUtility;
 
 /**
  * @contact Syed Asad Rahman, EMBL-EBI, Cambridge, UK.
@@ -60,7 +61,7 @@ public class RXNMappingTest extends MappingUtility {
     public void Test1() throws Exception {
 
         String reactionSM = "CC(=O)C=C.CC=CC=C>>CC1CC(CC=C1)C(C)=O";
-        SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser smilesParser = new SmilesParser(GlobalSettings.BUILDER);
         IReaction parseReactionSmiles = smilesParser.parseReactionSmiles(reactionSM);
         parseReactionSmiles.setID("TestReaction");
         ReactionMechanismTool testReactions = getAnnotation(parseReactionSmiles);
@@ -85,7 +86,7 @@ public class RXNMappingTest extends MappingUtility {
     public void EC2_6_1_32() throws Exception {
 
         String reactionSM = "CC(C)C(N)C(=O)O.CCC(C)C(=O)C(=O)[O-]>>CCC(C)C(N)C(=O)O.CC(C)C(=O)C(=O)[O-]";
-        SmilesParser smilesParser = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser smilesParser = new SmilesParser(GlobalSettings.BUILDER);
         IReaction parseReactionSmiles = smilesParser.parseReactionSmiles(reactionSM);
         parseReactionSmiles.setID("EC2_6_1_32");
         ReactionMechanismTool testReactions = getAnnotation(parseReactionSmiles);

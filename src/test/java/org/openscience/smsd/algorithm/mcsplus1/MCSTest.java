@@ -8,8 +8,8 @@ package org.openscience.smsd.algorithm.mcsplus1;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
-import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
 import org.openscience.cdk.smiles.SmilesParser;
 
 /**
@@ -26,7 +26,7 @@ public class MCSTest {
     @Test
     public void testSet_IMolecule_IMolecule() throws Exception {
         ////////System.out.println("3");
-        SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer query = sp.parseSmiles("Nc1ccccc1");
         IAtomContainer target = sp.parseSmiles("Nc1ccccc1");
 
@@ -46,7 +46,7 @@ public class MCSTest {
     @Test
     public void testSet_count() throws Exception {
         ////////System.out.println("3");
-        SmilesParser sp = new SmilesParser(DefaultChemObjectBuilder.getInstance());
+        SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
         IAtomContainer query = sp.parseSmiles("*C1OC(CO)C(OP=O)C1O");
         IAtomContainer target = sp.parseSmiles("*[P](=O)(O)OCC1O[CH]C(OC(=O)C(N)CC2=CC=C(O)C=C2)C1O");
 

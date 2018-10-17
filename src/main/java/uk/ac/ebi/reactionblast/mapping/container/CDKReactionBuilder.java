@@ -18,14 +18,26 @@
  */
 package uk.ac.ebi.reactionblast.mapping.container;
 
+import static java.lang.System.out;
+import static java.util.Collections.sort;
+import static java.util.Collections.synchronizedMap;
+import static java.util.logging.Level.SEVERE;
+import static org.openscience.cdk.interfaces.IReaction.Direction.BIDIRECTIONAL;
+import static org.openscience.cdk.smiles.SmilesGenerator.generic;
+import static org.openscience.cdk.smiles.SmilesGenerator.unique;
+import static org.openscience.cdk.tools.LoggingToolFactory.createLoggingTool;
+import static org.openscience.cdk.tools.manipulator.AtomContainerManipulator.removeHydrogens;
+import static uk.ac.ebi.reactionblast.fingerprints.tools.Similarity.getTanimotoSimilarity;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.aromatizeMolecule;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.cloneWithIDs;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.fixDativeBonds;
+import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms;
+
 import java.io.IOException;
 import java.io.Serializable;
-import static java.lang.System.out;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
-import static java.util.Collections.sort;
-import static java.util.Collections.synchronizedMap;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,33 +45,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import static java.util.logging.Level.SEVERE;
 
-import static org.openscience.cdk.DefaultChemObjectBuilder.getInstance;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.fingerprint.Fingerprinter;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IReaction;
-import static org.openscience.cdk.interfaces.IReaction.Direction.BIDIRECTIONAL;
 import org.openscience.cdk.interfaces.IReactionSet;
 import org.openscience.cdk.smiles.SmiFlavor;
 import org.openscience.cdk.smiles.SmilesGenerator;
-import static org.openscience.cdk.smiles.SmilesGenerator.generic;
-import static org.openscience.cdk.smiles.SmilesGenerator.unique;
 import org.openscience.cdk.tools.ILoggingTool;
-import static org.openscience.cdk.tools.LoggingToolFactory.createLoggingTool;
 import org.openscience.smsd.Substructure;
+
+import uk.ac.ebi.GlobalSettings;
 import uk.ac.ebi.reactionblast.fingerprints.FingerprintGenerator;
 import uk.ac.ebi.reactionblast.fingerprints.interfaces.IFingerprintGenerator;
-import static uk.ac.ebi.reactionblast.fingerprints.tools.Similarity.getTanimotoSimilarity;
 import uk.ac.ebi.reactionblast.tools.AtomContainerSetComparator;
 import uk.ac.ebi.reactionblast.tools.BasicDebugger;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.aromatizeMolecule;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.cloneWithIDs;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.fixDativeBonds;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.percieveAtomTypesAndConfigureAtoms;
-import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.removeHydrogens;
 
 /**
  * @contact Syed Asad Rahman, EMBL-EBI, Cambridge, UK.
@@ -82,7 +84,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
      * @throws java.lang.Exception
      */
     public CDKReactionBuilder() throws Exception {
-        reactionSet = getInstance().newInstance(IReactionSet.class);
+        reactionSet = GlobalSettings.BUILDER.newInstance(IReactionSet.class);
         stoichiometryMap = synchronizedMap(new HashMap<>());
         fingerprintMap = synchronizedMap(new HashMap<>());
         moleculeMap = synchronizedMap(new HashMap<>());
@@ -126,7 +128,7 @@ public class CDKReactionBuilder extends BasicDebugger implements Serializable {
         }
 
         List<IAtomContainer> _metabolites = new ArrayList<>();
-        IReaction standardizedReaction = getInstance().newInstance(IReaction.class);
+        IReaction standardizedReaction = GlobalSettings.BUILDER.newInstance(IReaction.class);
 
         String reactionID = reaction.getID();
         int reactionCounter = 1;
