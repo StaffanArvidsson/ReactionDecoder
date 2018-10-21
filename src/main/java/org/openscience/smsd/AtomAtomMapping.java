@@ -29,6 +29,7 @@ package org.openscience.smsd;
 
 import static org.openscience.cdk.CDKConstants.ATOM_ATOM_MAPPING;
 import static org.openscience.cdk.CDKConstants.MAPPED;
+import static org.openscience.cdk.aromaticity.ElectronDonation.daylight;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -42,7 +43,9 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.logging.Level;
 
+import org.openscience.cdk.aromaticity.Aromaticity;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
@@ -134,6 +137,8 @@ public final class AtomAtomMapping implements Serializable {
      */
     public synchronized void put(IAtom atom1, IAtom atom2) {
         try {
+            atom1.setID(atom1.getID() == null ? getQuery().indexOf(atom1) + "" : atom1.getID());
+            atom2.setID(atom2.getID() == null ? getTarget().indexOf(atom2) + "" : atom2.getID());
             mapping.put(atom1, atom2);
             mappingIndex.put(getQuery().indexOf(atom1), getTarget().indexOf(atom2));
         } catch (Exception e) {
@@ -394,11 +399,18 @@ public final class AtomAtomMapping implements Serializable {
      * @throws CDKException
      */
     public synchronized String getCommonFragmentAsSMILES() throws CloneNotSupportedException, CDKException {
-        SmilesGenerator aromatic = new SmilesGenerator(
+        SmilesGenerator smiles = new SmilesGenerator(
                 SmiFlavor.Unique
                 | SmiFlavor.UseAromaticSymbols
-                | SmiFlavor.AtomAtomMap);
-        return aromatic.create(getCommonFragment());
+                | SmiFlavor.AtomAtomMap
+                | SmiFlavor.Stereo);
+        IAtomContainer commonFragment = getCommonFragment();
+        Aromaticity aromaticity = new Aromaticity(daylight(),
+                Cycles.or(Cycles.all(),
+                        Cycles.or(Cycles.relevant(),
+                                Cycles.essential())));
+        aromaticity.apply(commonFragment);
+        return smiles.create(commonFragment);
     }
 
     /*

@@ -22,9 +22,11 @@ import java.io.File;
 import static java.io.File.separator;
 import java.io.FileWriter;
 import java.io.Serializable;
+import static java.lang.Runtime.getRuntime;
 import static java.lang.String.valueOf;
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.gc;
+import static java.lang.System.getProperty;
 import static java.lang.System.out;
 import static java.util.Collections.synchronizedMap;
 import static java.util.Collections.unmodifiableMap;
@@ -34,8 +36,7 @@ import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
-import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import java.util.concurrent.Executors;
 
 import org.openscience.cdk.interfaces.IReaction;
 import org.openscience.cdk.tools.ILoggingTool;
@@ -57,6 +58,7 @@ import uk.ac.ebi.reactionblast.tools.rxnfile.MDLV2000RXNWriter;
  */
 public class CallableAtomMappingTool implements Serializable {
 
+    static final String NEW_LINE = getProperty("line.separator");
     private final static boolean DEBUG = false;
     private final static ILoggingTool LOGGER
             = createLoggingTool(CallableAtomMappingTool.class);
@@ -108,9 +110,17 @@ public class CallableAtomMappingTool implements Serializable {
             boolean removeHydrogen) {
         ExecutorService executor = null;
         if (DEBUG) {
-            executor = newSingleThreadExecutor();
+            executor = Executors.newSingleThreadExecutor();
         } else {
-            executor = newCachedThreadPool();
+            int threadsAvailable = getRuntime().availableProcessors() - 1;
+            if (threadsAvailable == 0) {
+                threadsAvailable = 1;
+            }
+
+            if (threadsAvailable > 4) {
+                threadsAvailable = 4;
+            }
+            executor = Executors.newFixedThreadPool(threadsAvailable);
         }
         int jobCounter = 0;
         try {
@@ -119,11 +129,11 @@ public class CallableAtomMappingTool implements Serializable {
             /*
              * MAX Algorithm
              */
-            LOGGER.info("\n|++++++++++++++++++++++++++++|");
+            LOGGER.info(NEW_LINE + "|++++++++++++++++++++++++++++|");
             LOGGER.info("a) Global Model: ");
             if (DEBUG) {
-                out.println("\n-----------------------------------\n");
-                out.println("\nSTEP 1: Global Model Standardize Reactions\n");
+                out.println(NEW_LINE + "-----------------------------------" + NEW_LINE);
+                out.println(NEW_LINE + "STEP 1: Global Model Standardize Reactions" + NEW_LINE);
             }
             IReaction cleanedReaction1 = null;
             try {
@@ -133,20 +143,19 @@ public class CallableAtomMappingTool implements Serializable {
                 LOGGER.error(e);
             }
             if (DEBUG) {
-                out.println("\nSTEP 2: Calling Mapping Models\n");
+                out.println(NEW_LINE + "STEP a: Calling Mapping Models" + NEW_LINE);
             }
             MappingThread maxThread = new MappingThread("IMappingAlgorithm.MAX", cleanedReaction1, MAX, removeHydrogen);
             cs.submit(maxThread);
             jobCounter++;
-
             /*
              * MIN Algorithm
              */
-            LOGGER.info("\n|++++++++++++++++++++++++++++|");
-            LOGGER.info("c) Local Model: ");
+            LOGGER.info(NEW_LINE + "|++++++++++++++++++++++++++++|");
+            LOGGER.info("b) Local Model: ");
             if (DEBUG) {
-                out.println("\n-----------------------------------\n");
-                out.println("\nSTEP 1: Local Model Standardize Reactions\n");
+                out.println(NEW_LINE + "-----------------------------------" + NEW_LINE);
+                out.println(NEW_LINE + "STEP b: Local Model Standardize Reactions" + NEW_LINE);
             }
             IReaction cleanedReaction2 = null;
             try {
@@ -161,11 +170,11 @@ public class CallableAtomMappingTool implements Serializable {
             /*
              * MIXTURE Algorithm
              */
-            LOGGER.info("\n|++++++++++++++++++++++++++++|");
-            LOGGER.info("b) Mixture Model: ");
+            LOGGER.info(NEW_LINE + "|++++++++++++++++++++++++++++|");
+            LOGGER.info("c) Mixture Model: ");
             if (DEBUG) {
-                out.println("\n-----------------------------------\n");
-                out.println("\nSTEP 1: Mixture Model Standardize Reactions\n");
+                out.println(NEW_LINE + "-----------------------------------" + NEW_LINE);
+                out.println(NEW_LINE + "STEP c: Mixture Model Standardize Reactions" + NEW_LINE);
             }
             IReaction cleanedReaction3 = null;
             try {
@@ -177,26 +186,26 @@ public class CallableAtomMappingTool implements Serializable {
             MappingThread maxMixtureThread = new MappingThread("IMappingAlgorithm.MIXTURE", cleanedReaction3, MIXTURE, removeHydrogen);
             cs.submit(maxMixtureThread);
             jobCounter++;
-
-            /*
-             * RINGS Minimization
-             */
-            LOGGER.info("\n|++++++++++++++++++++++++++++|");
-            LOGGER.info("d) Rings Model: ");
-            if (DEBUG) {
-                out.println("\n-----------------------------------\n");
-                out.println("\nSTEP 1: Rings Model Standardize Reactions\n");
-            }
-            IReaction cleanedReaction4 = null;
-            try {
-                cleanedReaction4 = standardizer.standardize(reaction);
-            } catch (Exception e) {
-                LOGGER.debug("ERROR: in AtomMappingTool: " + e.getMessage());
-                LOGGER.error(e);
-            }
-            MappingThread ringThread = new MappingThread("IMappingAlgorithm.RINGS", cleanedReaction4, RINGS, removeHydrogen);
-            cs.submit(ringThread);
-            jobCounter++;
+//
+//            /*
+//             * RINGS Minimization
+//             */
+//            LOGGER.info(NEW_LINE + "|++++++++++++++++++++++++++++|");
+//            LOGGER.info("d) Rings Model: ");
+//            if (DEBUG) {
+//                out.println(NEW_LINE + "-----------------------------------" + NEW_LINE);
+//                out.println(NEW_LINE + "STEP d: Rings Model Standardize Reactions" + NEW_LINE);
+//            }
+//            IReaction cleanedReaction4 = null;
+//            try {
+//                cleanedReaction4 = standardizer.standardize(reaction);
+//            } catch (Exception e) {
+//                LOGGER.debug("ERROR: in AtomMappingTool: " + e.getMessage());
+//                LOGGER.error(e);
+//            }
+//            MappingThread ringThread = new MappingThread("IMappingAlgorithm.RINGS", cleanedReaction4, RINGS, removeHydrogen);
+//            cs.submit(ringThread);
+//            jobCounter++;
 
             /*
              * Collect the results

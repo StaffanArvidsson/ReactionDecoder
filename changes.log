@@ -226,6 +226,22 @@ Changes (15/10/2018)
 -----------------------
 a) Loggers cleaned up
 b) Version 2.0.1-SNAPSHOT with minor updates 
+c) Reaction SMILES
+
+-----------------------
+Changes (17/10/2018)
+-----------------------
+a) Stereo flag used for SMILES
+b) Clean up 
+c) Optimised fragment mapping speed (phase 1)
+
+-----------------------
+Changes (21/10/2018)
+-----------------------
+a) Major gain in AAM speed
+b) Improved MCS code in the SMSD
+c) Code Clean and Bug fixes 
+
 
 -----------------------
 TO DO

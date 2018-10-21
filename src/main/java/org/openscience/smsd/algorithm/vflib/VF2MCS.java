@@ -23,6 +23,7 @@
 package org.openscience.smsd.algorithm.vflib;
 
 import java.io.IOException;
+import static java.lang.Runtime.getRuntime;
 import java.util.*;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -32,8 +33,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.ConnectivityChecker;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.interfaces.IAtomContainerSet;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtom;
 import org.openscience.cdk.isomorphism.matchers.IQueryAtomContainer;
@@ -80,7 +83,11 @@ public final class VF2MCS extends BaseMCS implements IResults {
      * @param shouldMatchRings ring match
      * @param matchAtomType
      */
-    public VF2MCS(IAtomContainer source, IAtomContainer target, boolean shouldMatchBonds, boolean shouldMatchRings, boolean matchAtomType) {
+    public VF2MCS(IAtomContainer source,
+            IAtomContainer target,
+            boolean shouldMatchBonds,
+            boolean shouldMatchRings,
+            boolean matchAtomType) {
         super(source, target, shouldMatchBonds, shouldMatchRings, matchAtomType);
         boolean timeoutVF = searchVFMappings();
 
@@ -123,8 +130,17 @@ public final class VF2MCS extends BaseMCS implements IResults {
             allLocalAtomAtomMapping.clear();
 
             long startTimeSeeds = System.nanoTime();
+            /*
+             *   Assign the threads
+             */
+            int threadsAvailable = getRuntime().availableProcessors() - 1;
+            if (threadsAvailable == 0) {
+                threadsAvailable = 1;
+            } else if (threadsAvailable > 2) {
+                threadsAvailable = 2;
+            }
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
+            ExecutorService executor = Executors.newFixedThreadPool(threadsAvailable);
             CompletionService<List<AtomAtomMapping>> cs = new ExecutorCompletionService<>(executor);
 
             /*
@@ -176,17 +192,25 @@ public final class VF2MCS extends BaseMCS implements IResults {
                 }
 
             } catch (CloneNotSupportedException ex) {
-                 LOGGER.error(Level.SEVERE, null, ex);
+                LOGGER.error(Level.SEVERE, null, ex);
             }
 
+            /*
+             * CDK MCS faulter on disconnected molecules
+             */
+            //boolean moleculeConnected = isMoleculeConnected(source, targetClone);
             int jobCounter = 0;
 
-            if (DEBUG) {
-                System.out.println(" CALLING UIT ");
-            }
             if (targetClone != null) {
-                if (targetClone.getBondCount() > 0) {
-                    MCSSeedGenerator mcsSeedGeneratorUIT = new MCSSeedGenerator(source, targetClone, shouldMatchBonds, shouldMatchRings, matchAtomType, Algorithm.CDKMCS);
+                if (source.getBondCount() > 0
+                        && targetClone.getBondCount() > 0) {
+                    if (DEBUG) {
+                        System.out.println(" CALLING UIT ");
+                    }
+                    MCSSeedGenerator mcsSeedGeneratorUIT
+                            = new MCSSeedGenerator(source, targetClone,
+                                    shouldMatchBonds, shouldMatchRings,
+                                    matchAtomType, Algorithm.CDKMCS);
                     cs.submit(mcsSeedGeneratorUIT);
                     jobCounter++;
                 }
@@ -195,7 +219,9 @@ public final class VF2MCS extends BaseMCS implements IResults {
             if (DEBUG) {
                 System.out.println(" CALLING MCSPLUS ");
             }
-            MCSSeedGenerator mcsSeedGeneratorKoch = new MCSSeedGenerator(source, targetClone, shouldMatchBonds, shouldMatchRings, matchAtomType, Algorithm.MCSPlus);
+            MCSSeedGenerator mcsSeedGeneratorKoch
+                    = new MCSSeedGenerator(source, targetClone, shouldMatchBonds,
+                            shouldMatchRings, matchAtomType, Algorithm.MCSPlus);
             cs.submit(mcsSeedGeneratorKoch);
             jobCounter++;
 
@@ -232,7 +258,9 @@ public final class VF2MCS extends BaseMCS implements IResults {
 
             long stopTimeSeeds = System.nanoTime();
             if (DEBUG) {
-                System.out.println("time taken for seeds: " + TimeUnit.MILLISECONDS.convert((stopTimeSeeds - startTimeSeeds), TimeUnit.NANOSECONDS) + " ms.");
+                System.out.println("time taken for seeds: "
+                        + TimeUnit.MILLISECONDS.convert((stopTimeSeeds - startTimeSeeds),
+                                TimeUnit.NANOSECONDS) + " ms.");
             }
             /*
              * Store largest MCS seeds generated from MCSPlus and UIT
@@ -400,7 +428,7 @@ public final class VF2MCS extends BaseMCS implements IResults {
 
             long startTimeSeeds = System.nanoTime();
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
+            ExecutorService executor = Executors.newCachedThreadPool();
             CompletionService<List<AtomAtomMapping>> cs = new ExecutorCompletionService<>(executor);
 
             /*
@@ -431,11 +459,13 @@ public final class VF2MCS extends BaseMCS implements IResults {
                 }
 
             } catch (CloneNotSupportedException ex) {
-                 LOGGER.error(Level.SEVERE, null, ex);
+                LOGGER.error(Level.SEVERE, null, ex);
             }
 
-            MCSSeedGenerator mcsSeedGeneratorUIT = new MCSSeedGenerator((IQueryAtomContainer) source, targetClone, Algorithm.CDKMCS);
-            MCSSeedGenerator mcsSeedGeneratorKoch = new MCSSeedGenerator((IQueryAtomContainer) source, targetClone, Algorithm.MCSPlus);
+            MCSSeedGenerator mcsSeedGeneratorUIT
+                    = new MCSSeedGenerator((IQueryAtomContainer) source, targetClone, Algorithm.CDKMCS);
+            MCSSeedGenerator mcsSeedGeneratorKoch
+                    = new MCSSeedGenerator((IQueryAtomContainer) source, targetClone, Algorithm.MCSPlus);
 
             int jobCounter = 0;
             cs.submit(mcsSeedGeneratorUIT);
@@ -748,5 +778,32 @@ public final class VF2MCS extends BaseMCS implements IResults {
             return allAtomMCS.iterator().next();
         }
         return new AtomAtomMapping(getReactantMol(), getProductMol());
+    }
+
+    /*
+     * Check if fragmented container has single atom
+     */
+    boolean isMoleculeConnected(IAtomContainer compound1, IAtomContainer compound2) {
+
+        boolean connected1 = true;
+
+        IAtomContainerSet partitionIntoMolecules = ConnectivityChecker.partitionIntoMolecules(compound1);
+        for (IAtomContainer a : partitionIntoMolecules.atomContainers()) {
+
+            if (a.getAtomCount() == 1) {
+                connected1 = false;
+            }
+        }
+
+        boolean connected2 = true;
+
+        partitionIntoMolecules = ConnectivityChecker.partitionIntoMolecules(compound2);
+        for (IAtomContainer a : partitionIntoMolecules.atomContainers()) {
+
+            if (a.getAtomCount() == 1) {
+                connected2 = false;
+            }
+        }
+        return connected1 & connected2;
     }
 }

@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-
 package uk.ac.ebi.reactionblast.mapping;
 
 import java.io.IOException;
@@ -61,6 +60,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.lang.String.valueOf;
+import static java.lang.System.getProperty;
 import static java.util.Arrays.sort;
 import static java.util.Collections.synchronizedList;
 
@@ -78,7 +78,7 @@ public class Reactor extends AbstractReactor implements Serializable {
 
     private static final boolean DEBUG = false;
     private static final long serialVersionUID = 197816786981017L;
-     private final static ILoggingTool LOGGER
+    private final static ILoggingTool LOGGER
             = createLoggingTool(Reactor.class);
     private final Map<Integer, Integer> rLabelledAtoms;
     private final Map<Integer, Integer> pLabelledAtoms;
@@ -97,6 +97,7 @@ public class Reactor extends AbstractReactor implements Serializable {
     private int delta;
     private boolean balanceFlag;
     private IReaction reactionWithUniqueSTOICHIOMETRY;
+    static final String NEW_LINE = getProperty("line.separator");
 
     //~--- constructors -------------------------------------------------------
     /**
@@ -153,7 +154,7 @@ public class Reactor extends AbstractReactor implements Serializable {
             super.printReaction(reactionWithUniqueSTOICHIOMETRY);
             out.println("|++++++++++++++++++++++++++++|");
             out.println("|iv. Done|");
-            out.println("|++++++++++++++++++++++++++++|\n\n");
+            out.println("|++++++++++++++++++++++++++++|" + NEW_LINE + NEW_LINE);
         }
     }
 
@@ -163,9 +164,14 @@ public class Reactor extends AbstractReactor implements Serializable {
         SmilesGenerator smiles;
         if (partialMapping) {
             //else CDKToBeam throws an error "Aromatic bond connects non-aromatic atomic atoms"
-            smiles = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.AtomAtomMap);
+            smiles = new SmilesGenerator(SmiFlavor.Unique
+                    | SmiFlavor.AtomAtomMap
+                    | SmiFlavor.Stereo);
         } else {
-            smiles = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols | SmiFlavor.AtomAtomMap);
+            smiles = new SmilesGenerator(SmiFlavor.Unique
+                    | SmiFlavor.UseAromaticSymbols
+                    | SmiFlavor.AtomAtomMap
+                    | SmiFlavor.Stereo);
         }
 
         String createReactionSMILES = "";
@@ -529,16 +535,14 @@ public class Reactor extends AbstractReactor implements Serializable {
         }
 
         /*
-        * Store atom-atom mappingMap objects in the reaction
-        *
+         * Store atom-atom mappingMap objects in the reaction
+         *
          */
-        for (IAtom key : mappings.keySet()) {
-            if (key != null && mappings.get(key) != null) {
-                IMapping mappingObject
-                        = mappedReaction.getBuilder().newInstance(IMapping.class, key, mappings.get(key));
-                mappedReaction.addMapping(mappingObject);
-            }
-        }
+        mappings.keySet().stream().filter((key)
+                -> (key != null && mappings.get(key) != null)).map((key)
+                -> mappedReaction.getBuilder().newInstance(IMapping.class, key, mappings.get(key))).forEachOrdered((mappingObject) -> {
+            mappedReaction.addMapping(mappingObject);
+        });
 
         /*
         * Canonical labelling of each molecule is done and mappingMap number corresponds to the lables
@@ -1121,7 +1125,7 @@ public class Reactor extends AbstractReactor implements Serializable {
         }
 
         if (DEBUG) {
-            LOGGER.debug("\nmol before: ");
+            LOGGER.debug(NEW_LINE + "mol before: ");
             printAtoms(cloneMolecule);
         }
         /*
@@ -1180,7 +1184,7 @@ public class Reactor extends AbstractReactor implements Serializable {
             printAtoms(cloneMolecule);
             LOGGER.debug("canonicalMolecule: "
                     + generic().create(cloneMolecule)
-                    + "\n\n");
+                    + NEW_LINE + NEW_LINE);
         }
 
         return cloneMolecule;

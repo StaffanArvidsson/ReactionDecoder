@@ -37,13 +37,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import static java.util.logging.Level.SEVERE;
 import static org.openscience.cdk.CDKConstants.MAPPED;
 import org.openscience.cdk.Mapping;
+import org.openscience.cdk.aromaticity.Aromaticity;
+import org.openscience.cdk.aromaticity.ElectronDonation;
 import static org.openscience.cdk.aromaticity.Kekulization.kekulize;
 import org.openscience.cdk.exception.CDKException;
 import static org.openscience.cdk.graph.ConnectivityChecker.isConnected;
 import static org.openscience.cdk.graph.ConnectivityChecker.partitionIntoMolecules;
+import org.openscience.cdk.graph.Cycles;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IAtomContainerSet;
@@ -1196,7 +1200,31 @@ public class BondChangeCalculator extends AbstractChangeCalculator implements IC
         } catch (CloneNotSupportedException ex) {
             LOGGER.error(SEVERE, null, ex);
         }
+
+        try {
+            KekulizeReaction(compressedReaction);
+        } catch (CDKException ex) {
+            LOGGER.error(Level.SEVERE, null, ex);
+        }
         return compressedReaction;
+    }
+
+    private static void KekulizeReaction(IReaction r) throws CDKException {
+        ElectronDonation model = ElectronDonation.daylight();
+//        CycleFinder cycles = Cycles.or(Cycles.all(), Cycles.all(6));
+//        Aromaticity aromaticity = new Aromaticity(model, cycles);
+
+        Aromaticity aromaticity = new Aromaticity(model,
+                Cycles.or(Cycles.all(),
+                        Cycles.or(Cycles.relevant(),
+                                Cycles.essential())));
+        // apply our configured model to each molecule
+        for (IAtomContainer molecule : r.getReactants().atomContainers()) {
+            aromaticity.apply(molecule);
+        }
+        for (IAtomContainer molecule : r.getProducts().atomContainers()) {
+            aromaticity.apply(molecule);
+        }
     }
 
     /**
@@ -1307,7 +1335,7 @@ public class BondChangeCalculator extends AbstractChangeCalculator implements IC
         result.append(NEW_LINE).append("\t EMBL-EBI, Hinxton ");
         result.append(NEW_LINE).append("\t Cambridge CB10 1SD");
         result.append(NEW_LINE).append("\t United Kingdom ");
-        result.append(NEW_LINE).append("e-mail: asad@ebi.ac.uk, thornton@ebi.ac.uk");
+        result.append(NEW_LINE).append("e-mail: asad@ebi.ac.uk|s9asad@gmail.com, thornton@ebi.ac.uk");
         result.append(NEW_LINE).append("++++++++++++++++++++++++++++++++++++++++++++++").append(NEW_LINE);
         result.append(NEW_LINE).append("ecBLAST software can perform atom-atom mapping,");
         result.append(NEW_LINE).append("marks bond changes between reactions, calculate");
@@ -1316,7 +1344,7 @@ public class BondChangeCalculator extends AbstractChangeCalculator implements IC
         result.append(NEW_LINE).append("++++++++++++++++++++++++++++++++++++++++++++++").append(NEW_LINE);
         result.append(NEW_LINE).append("Acknowledgment: Many thanks to Franz Fenninger,");
         result.append(NEW_LINE).append("Gilleain Torrance, Lorenzo Baldacci and Gemma L.");
-        result.append(NEW_LINE).append("Holliday for their contributions/inputs.").append(NEW_LINE);
+        result.append(NEW_LINE).append("Holliday for their contributions/input.").append(NEW_LINE);
         result.append(NEW_LINE).append("The open source tools i.e. the SMSD, CDK and InChI");
         result.append(NEW_LINE).append("were used in this project. The licensed version of");
         result.append(NEW_LINE).append("the Chemaxon was used for 3D model building,");

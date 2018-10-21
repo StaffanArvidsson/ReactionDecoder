@@ -19,8 +19,8 @@
 package uk.ac.ebi.reactionblast.mapping.graph;
 
 import java.io.IOException;
-import static java.lang.Runtime.getRuntime;
 import static java.lang.System.gc;
+import static java.lang.System.getProperty;
 import static java.lang.System.out;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +39,6 @@ import static java.util.logging.Level.WARNING;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.graph.CycleFinder;
 import org.openscience.cdk.graph.Cycles;
-import static org.openscience.cdk.graph.Cycles.or;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.smiles.SmilesGenerator;
@@ -51,10 +50,10 @@ import uk.ac.ebi.reactionblast.mapping.algorithm.Holder;
 import uk.ac.ebi.reactionblast.mapping.container.ReactionContainer;
 import uk.ac.ebi.reactionblast.mapping.helper.Debugger;
 import static java.util.Collections.synchronizedCollection;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
-import static org.openscience.cdk.graph.Cycles.all;
+import org.openscience.cdk.aromaticity.Aromaticity;
+import static org.openscience.cdk.aromaticity.ElectronDonation.daylight;
 import org.openscience.cdk.smiles.SmiFlavor;
 
 /**
@@ -63,6 +62,7 @@ import org.openscience.cdk.smiles.SmiFlavor;
  */
 public class GraphMatcher extends Debugger {
 
+    static final String NEW_LINE = getProperty("line.separator");
     private final static boolean DEBUG = false;
     private final static ILoggingTool LOGGER
             = createLoggingTool(GraphMatcher.class);
@@ -77,7 +77,9 @@ public class GraphMatcher extends Debugger {
         ExecutorService executor = null;
         Collection<MCSSolution> mcsSolutions = synchronizedCollection(new ArrayList<>());
 
-//        System.out.println(threadsAvailable + " threads to be used for graph matching for " + mh.getTheory());
+        if (DEBUG) {
+            System.out.println("Matcher Class for " + mh.getTheory());
+        }
         Set<Combination> jobReplicatorList = new TreeSet<>();
         int taskCounter = 0;
 
@@ -137,25 +139,29 @@ public class GraphMatcher extends Debugger {
             }
 
             /*
-             Assign the threads
+             * Assign the threads
+             *
+             * Use Single Thread to computed MCS as muntiple threads lock the calculations!
              */
-            int threadsAvailable = getRuntime().availableProcessors() - 1;
-            if (threadsAvailable == 0) {
-                threadsAvailable = 1;
-            }
+            executor = newSingleThreadExecutor();
 
-            if (threadsAvailable > jobMap.size()) {
-                threadsAvailable = jobMap.size();
-            }
-            if (DEBUG) {
-                out.println(threadsAvailable + " threads requested for MCS in " + mh.getTheory());
-            }
-
-            if (DEBUG) {
-                executor = newSingleThreadExecutor();
-            } else {
-                executor = newCachedThreadPool();
-            }
+//            int threadsAvailable = getRuntime().availableProcessors() - 1;
+//            if (threadsAvailable == 0) {
+//                threadsAvailable = 1;
+//            }
+//
+//            if (threadsAvailable > jobMap.size()) {
+//                threadsAvailable = jobMap.size();
+//            }
+//            if (DEBUG) {
+//                out.println(threadsAvailable + " threads requested for MCS in " + mh.getTheory());
+//            }
+//
+//            if (DEBUG) {
+//                executor = newSingleThreadExecutor();
+//            } else {
+//                executor = Executors.newFixedThreadPool(threadsAvailable);
+//            }
             CompletionService<MCSSolution> callablesQueue = new ExecutorCompletionService<>(executor);
 
             for (Combination c : jobMap.keySet()) {
@@ -173,9 +179,23 @@ public class GraphMatcher extends Debugger {
                 /*
                  * Report All Cycles
                  * or 
-                 * CycleFinder cycles = or(all(), relevant());
+                 * CycleFinder cycles = or(Cycles.all(), Cycles.all());
+                 * CycleFinder cycles = Cycles.or(Cycles.all(), Cycles.relevant());
                  */
-                CycleFinder cycles = or(all(), all());
+                Aromaticity aromaticity = new Aromaticity(daylight(),
+                        Cycles.or(Cycles.all(),
+                                Cycles.or(Cycles.relevant(),
+                                        Cycles.essential())));
+                /*
+                 * Aromatise molecule for escaping CDKtoBeam Aromatic bond error
+                 */
+                aromaticity.apply(educt);
+                aromaticity.apply(product);
+
+                /*
+                 * Report short cycyles
+                 */
+                CycleFinder cycles = Cycles.vertexShort();
                 Cycles rings = cycles.find(educt);
                 int numberOfCyclesEduct = rings.numberOfCycles();
                 rings = cycles.find(product);
@@ -188,14 +208,21 @@ public class GraphMatcher extends Debugger {
                     ringSizeEqual = true;
                 }
                 if (DEBUG) {
-                    SmilesGenerator smilesGenerator = new SmilesGenerator(SmiFlavor.Unique | SmiFlavor.UseAromaticSymbols);
-                    out.println(educt.getID() + " ED: " + smilesGenerator.create(educt));
-                    out.println(product.getID() + " PD: " + smilesGenerator.create(product));
-                    out.println("numberOfCyclesEduct " + numberOfCyclesEduct);
-                    out.println("numberOfCyclesProduct " + numberOfCyclesProduct);
-                    out.println("ringSizeEqual " + ringSizeEqual);
-                    out.println("Ring " + ring);
-                    out.println("----------------------------------");
+                    try {
+                        SmilesGenerator smilesGenerator;
+                        System.out.println("SMILES");
+                        smilesGenerator = new SmilesGenerator(SmiFlavor.Stereo
+                                | SmiFlavor.AtomAtomMap);
+                        out.println(educt.getID() + " ED: " + smilesGenerator.create(educt));
+                        out.println(product.getID() + " PD: " + smilesGenerator.create(product));
+                        out.println("numberOfCyclesEduct " + numberOfCyclesEduct);
+                        out.println("numberOfCyclesProduct " + numberOfCyclesProduct);
+                        out.println("ringSizeEqual " + ringSizeEqual);
+                        out.println("Ring " + ring);
+                        out.println("----------------------------------");
+                    } catch (CDKException e) {
+                        LOGGER.error(SEVERE, null, e);
+                    }
                 }
 
                 MCSThread mcsThread;
@@ -204,22 +231,23 @@ public class GraphMatcher extends Debugger {
                     case MIN:
                         mcsThread = new MCSThread(mh.getTheory(), substrateIndex, productIndex, educt, product, false, ring, true);
                         mcsThread.setHasPerfectRings(ringSizeEqual);
-                        mcsThread.setEductCount(eductCount);
-                        mcsThread.setProductCount(productCount);
+                        mcsThread.setEductRingCount(numberOfCyclesEduct);
+                        mcsThread.setProductRingCount(numberOfCyclesProduct);
+                        
                         break;
 
                     case MAX:
                         mcsThread = new MCSThread(mh.getTheory(), substrateIndex, productIndex, educt, product, false, ring, true);
                         mcsThread.setHasPerfectRings(ringSizeEqual);
-                        mcsThread.setEductCount(eductCount);
-                        mcsThread.setProductCount(productCount);
+                        mcsThread.setEductRingCount(numberOfCyclesEduct);
+                        mcsThread.setProductRingCount(numberOfCyclesProduct);
                         break;
 
                     case MIXTURE:
                         mcsThread = new MCSThread(mh.getTheory(), substrateIndex, productIndex, educt, product, false, ring, false);
                         mcsThread.setHasPerfectRings(ringSizeEqual);
-                        mcsThread.setEductCount(eductCount);
-                        mcsThread.setProductCount(productCount);
+                        mcsThread.setEductRingCount(numberOfCyclesEduct);
+                        mcsThread.setProductRingCount(numberOfCyclesProduct);
                         break;
 
                     case RINGS:
@@ -233,8 +261,8 @@ public class GraphMatcher extends Debugger {
                          */
                         mcsThread = new MCSThread(mh.getTheory(), substrateIndex, productIndex, educt, product, false, ring, true);
                         mcsThread.setHasPerfectRings(ringSizeEqual);
-                        mcsThread.setEductCount(eductCount);
-                        mcsThread.setProductCount(productCount);
+                        mcsThread.setEductRingCount(numberOfCyclesEduct);
+                        mcsThread.setProductRingCount(numberOfCyclesProduct);
                         break;
 
                     default:
@@ -247,7 +275,7 @@ public class GraphMatcher extends Debugger {
                 }
             }
 
-            Collection<MCSSolution> threadedUniqueMCSSolutions = synchronizedCollection(new ArrayList<MCSSolution>());
+            Collection<MCSSolution> threadedUniqueMCSSolutions = synchronizedCollection(new ArrayList<>());
             for (int count = 0; count < taskCounter; count++) {
                 MCSSolution isomorphism = callablesQueue.take().get();
                 threadedUniqueMCSSolutions.add(isomorphism);
@@ -269,23 +297,33 @@ public class GraphMatcher extends Debugger {
             }
 
             if (DEBUG) {
-                out.println("Gathering MCS solution from the Thread");
+                out.println("==Gathering MCS solution from the Thread==");
             }
             threadedUniqueMCSSolutions.stream().filter((mcs) -> !(mcs == null)).map((MCSSolution mcs) -> {
                 int queryPosition = mcs.getQueryPosition();
                 int targetPosition = mcs.getTargetPosition();
-                if (DEBUG) {
-                    out.println("MCS " + "i " + queryPosition + " J " + targetPosition + " size " + mcs.getAtomAtomMapping().getCount());
-                }
-                Combination removeKey = null;
+//                if (DEBUG) {
+//                    System.out.println("");
+//                    out.println("MCS " + " I " + queryPosition
+//                            + " J " + targetPosition
+//                            + " Number of Atom Mapped " + mcs.getAtomAtomMapping().getCount());
+//                }
+                Combination referenceKey = null;
                 for (Combination c : jobMap.keySet()) {
                     if (c.getRowIndex() == queryPosition && c.getColIndex() == targetPosition) {
-                        removeKey = c;
+                        referenceKey = c;
                         MCSSolution replicatedMCS = replicateMappingOnContainers(mh, c, mcs);
+                        if (DEBUG) {
+                            System.out.println("======MCSSolution======");
+                            out.println("MCS " + " I " + queryPosition
+                                    + " J " + targetPosition
+                                    + " Number of Atom Mapped " + mcs.getAtomAtomMapping().getCount()
+                                    + " Number of Atom Mapped replicatedMCS " + replicatedMCS.getAtomAtomMapping().getCount());
+                        }
                         mcsSolutions.add(replicatedMCS);
                     }
                 }
-                return removeKey;
+                return referenceKey;
             }).filter((removeKey) -> (removeKey != null)).forEach((removeKey) -> {
                 jobMap.remove(removeKey);
             });
@@ -320,13 +358,14 @@ public class GraphMatcher extends Debugger {
 
             if (DEBUG) {
                 if (diff1 != 0 && diff2 != 0) {
-                    out.println("\n\n " + solution.getRowIndex() + ", Diff in ac1 " + diff1);
-                    out.println(solution.getColIndex() + ", Diff in ac2 " + diff2);
-                    out.println("\nac1 " + q.getAtomCount());
-                    out.println("\nac2 " + t.getAtomCount());
 
-                    out.println("\nmac1 " + mcs.getQueryContainer().getAtomCount());
-                    out.println("\nmac2 " + mcs.getTargetContainer().getAtomCount());
+                    out.println(NEW_LINE + NEW_LINE + " " + solution.getRowIndex() + ", Diff in ac1 " + diff1);
+                    out.println(solution.getColIndex() + ", Diff in ac2 " + diff2);
+                    out.println(NEW_LINE + "ac1 " + q.getAtomCount());
+                    out.println(NEW_LINE + "ac2 " + t.getAtomCount());
+
+                    out.println(NEW_LINE + "mac1 " + mcs.getQueryContainer().getAtomCount());
+                    out.println(NEW_LINE + "mac2 " + mcs.getTargetContainer().getAtomCount());
                 }
             }
 
@@ -336,15 +375,23 @@ public class GraphMatcher extends Debugger {
                 IAtom atomByID1 = getAtomByID(q, a);
                 IAtom b = atomAtomMapping.getMappingsByAtoms().get(a);
                 IAtom atomByID2 = getAtomByID(t, b);
-                if (DEBUG) {
-                    out.println("atomByID1 " + atomByID1.getID() + " atomByID2 " + atomByID2.getID());
-                }
+//                if (DEBUG) {
+//                    out.println("atomByID1 " + atomByID1.getID() + " atomByID2 " + atomByID2.getID());
+//                }
                 if (atomByID1 != null && atomByID2 != null) {
                     atomAtomMappingNew.put(atomByID1, atomByID2);
                 } else {
                     LOGGER.error(WARNING, "UnExpected NULL ATOM FOUND");
+                    System.err.println("WARNING: " + "UnExpected NULL ATOM FOUND");
                 }
             });
+
+            if (DEBUG) {
+                System.out.println("------Mapped PAIRS------");
+                System.out.println("Query " + q.getAtomCount());
+                System.out.println("Target " + t.getAtomCount());
+                System.out.println("Mapping Size " + atomAtomMappingNew.getCount());
+            }
             return new MCSSolution(solution.getRowIndex(), solution.getColIndex(), q, t, atomAtomMappingNew);
         } catch (IOException | CDKException ex) {
             LOGGER.error(SEVERE, null, ex);

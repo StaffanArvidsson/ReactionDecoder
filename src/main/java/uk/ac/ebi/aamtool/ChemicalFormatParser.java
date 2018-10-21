@@ -120,11 +120,7 @@ class ChemicalFormatParser {
         final SmilesGenerator sg = new SmilesGenerator(
                 SmiFlavor.AtomAtomMap
                 | SmiFlavor.UseAromaticSymbols
-                | SmiFlavor.Stereo
-                | SmiFlavor.StereoCisTrans
-                | SmiFlavor.StereoTetrahedral
-                | SmiFlavor.StereoTetrahedral
-                | SmiFlavor.StereoExTetrahedral);
+                | SmiFlavor.Stereo);
         String createSmilesFromReaction = sg.create(r);
         final SmilesParser smilesParser = new SmilesParser(GlobalSettings.BUILDER);
         IReaction parseReactionSmiles = smilesParser.parseReactionSmiles(createSmilesFromReaction);

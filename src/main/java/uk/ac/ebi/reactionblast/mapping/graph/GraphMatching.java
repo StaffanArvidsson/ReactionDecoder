@@ -52,18 +52,19 @@ import static uk.ac.ebi.reactionblast.tools.ExtAtomContainerManipulator.cloneWit
 
 /**
  *
- * @author Syed Asad Rahman, EMBL-EBI, Cambridge, UK @contact asad@ebi.ac.uk
+ * @author Syed Asad Rahman, EMBL-EBI, Cambridge, UK
+ * @contact asad@ebi.ac.uk
  */
 public class GraphMatching extends AbstractGraphMatching implements Serializable {
 
-    private final static ILoggingTool LOGGER
-            = createLoggingTool(GraphMatching.class);
+    private final static ILoggingTool LOGGER = createLoggingTool(GraphMatching.class);
     private static final long serialVersionUID = 0xf06b2d5f9L;
     private final IAtomContainer educt;
     private final IAtomContainer product;
     private IAtomContainer matchedPart = null;
     private Map<IAtom, IAtom> bestAtomMappingList;
     private int fragmentCount = 0;
+    private final static boolean DEBUG = false;
 
     /**
      * Creates a new instance of GraphMatching
@@ -121,10 +122,10 @@ public class GraphMatching extends AbstractGraphMatching implements Serializable
             } catch (Exception ex) {
                 LOGGER.error(Level.SEVERE, null, ex);
             }
-            BestMatch initMcsAtom = holder.getBestMatchContainer();
-            if (initMcsAtom.containsKey(substrateIndex, productIndex)) {
-                this.bestAtomMappingList = initMcsAtom.getAtomMatch(substrateIndex, productIndex).getMappingsByAtoms();
-                this.fragmentCount = initMcsAtom.getTotalFragmentCount(substrateIndex, productIndex);
+            BestMatch initMCSAtom = holder.getBestMatchContainer();
+            if (initMCSAtom.containsKey(substrateIndex, productIndex)) {
+                this.bestAtomMappingList = initMCSAtom.getAtomMatch(substrateIndex, productIndex).getMappingsByAtoms();
+                this.fragmentCount = initMCSAtom.getTotalFragmentCount(substrateIndex, productIndex);
                 if (this.bestAtomMappingList != null && !this.bestAtomMappingList.isEmpty()) {
                     return true;
                 }
@@ -145,7 +146,10 @@ public class GraphMatching extends AbstractGraphMatching implements Serializable
     public synchronized int removeMatchedAtomsAndUpdateAAM(IReaction reaction) {
         int delta = 0;
 
-//        System.out.println("Before removing Mol Size E: " + educt.getAtomCount() + " , Before removing Mol Size P: " + product.getAtomCount());
+        if (DEBUG) {
+            System.out.println("Before removing Mol Size E: " + educt.getAtomCount()
+                    + " , Before removing Mol Size P: " + product.getAtomCount());
+        }
         int beforeESize = educt.getAtomCount();
 
         if (bestAtomMappingList != null) {
@@ -153,6 +157,9 @@ public class GraphMatching extends AbstractGraphMatching implements Serializable
                 String eID = map.getKey().getID();
                 IAtom eAtom = getAtomByID(educt, eID);
                 String pID = map.getValue().getID();
+                if (DEBUG) {
+                    System.out.println("eID " + eID + ",pID " + pID);
+                }
                 IAtom pAtom = getAtomByID(product, pID);
 
                 if (eAtom != null && pAtom != null) {
@@ -170,16 +177,26 @@ public class GraphMatching extends AbstractGraphMatching implements Serializable
             matchedPart.removeAtom(matchedAtom);
         }
 
+        if (DEBUG) {
+            System.out.println("After removing Mol Size E: " + educt.getAtomCount()
+                    + " , After removing Mol Size P: " + product.getAtomCount());
+        }
+
         if (beforeESize == educt.getAtomCount()) {
             try {
-                System.out.println(educt.getID() + ": SMILES " + SmilesGenerator.generic().create(educt));
-                System.out.println(product.getID() + ": SMILES " + SmilesGenerator.generic().create(product));
-
+                if (DEBUG) {
+                    System.out.println(educt.getID() + ": SMILES " + SmilesGenerator.generic().create(educt));
+                    System.out.println(product.getID() + ": SMILES " + SmilesGenerator.generic().create(product));
+                }
                 throw new CDKException("Failed to remove matched parts between " + educt.getID() + ": "
                         + educt.getAtomCount() + " , " + product.getID() + " : " + product.getAtomCount()
                         + ", Mapping count: " + bestAtomMappingList.size() + "...atom ids did not matched!");
             } catch (CDKException ex) {
-                LOGGER.error(SEVERE, null, ex);
+                LOGGER.error(SEVERE, "Failed to remove matched parts between " + educt.getID() + ": "
+                        + educt.getAtomCount() + " , " + product.getID() + " : " + product.getAtomCount()
+                        + ", Mapping count: " + bestAtomMappingList.size() + "...atom ids did not matched!", ex);
+
+                Runtime.getRuntime().exit(1);
             }
         }
         return delta;

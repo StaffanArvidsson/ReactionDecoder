@@ -164,6 +164,7 @@ public class ReactionMechanismTool implements Serializable {
                 if (DEBUG) {
                     SmilesGenerator withAtomClasses = new SmilesGenerator(
                             SmiFlavor.Unique
+                            | SmiFlavor.Stereo
                             | SmiFlavor.AtomAtomMap);
                     LOGGER.debug("Input reaction mapped " + withAtomClasses.create(reaction));
                 }
@@ -188,6 +189,7 @@ public class ReactionMechanismTool implements Serializable {
 
                         SmilesGenerator withAtomClasses = new SmilesGenerator(
                                 SmiFlavor.Unique
+                                | SmiFlavor.Stereo
                                 | SmiFlavor.AtomAtomMap);
                         LOGGER.debug("reaction mapped " + withAtomClasses.create(reactor.getReactionWithAtomAtomMapping()));
                     }

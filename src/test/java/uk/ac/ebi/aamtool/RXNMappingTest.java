@@ -1245,11 +1245,8 @@ public class RXNMappingTest extends MappingUtility {
 
     /*
      * @25405	5.4.99.3 Rhea_25405
-     *  
-     * MIXTURE, fp 
-     * ID=25405:Bond Cleaved and Formed (2)
-     * [C-C:2.0, H-O:2.0]
-     * BE 692.0, Fragment 0
+     * ID=25405:Bond Cleaved and Formed (1)
+     * [C-C:2.0]
      *   
      *
      * @throws Exception
@@ -1263,7 +1260,8 @@ public class RXNMappingTest extends MappingUtility {
                 .getSelectedSolution()
                 .getBondChangeCalculator()
                 .getFormedCleavedWFingerprint();
-        assertEquals(2, formedCleavedWFingerprint.getFeatureCount());
+        //System.out.println("BC " + formedCleavedWFingerprint);
+        assertEquals(1, formedCleavedWFingerprint.getFeatureCount());
     }
 
     /*
@@ -1749,5 +1747,70 @@ public class RXNMappingTest extends MappingUtility {
          * Stereo Changed ID=10129:Bond Stereo Change (1) [C(R/S):1.0]
          */
         assertEquals(2, formedCleavedWFingerprint.getFeatureCount());
+    }
+
+    /**
+     * RHEA
+     *
+     * Cleaved FingerPrint (Reactant) N(31)-C(34)
+     *
+     * Formed FingerPrint (Product) S(8)-C(34)
+     *
+     * @throws Exception
+     */
+    @Test
+    public void Rhea10074() throws Exception {
+
+        String reactionID = "10074";
+        ReactionMechanismTool testReactions = testReactions(reactionID, RHEA_RXN_DIR);
+        IPatternFingerprinter formedCleavedWFingerprint = testReactions
+                .getSelectedSolution()
+                .getBondChangeCalculator()
+                .getFormedCleavedWFingerprint();
+        assertEquals(2, formedCleavedWFingerprint.getFeatureCount());
+    }
+
+    //10437
+    @Test
+    public void Rhea10437() throws Exception {
+
+        String reactionID = "10437";
+        ReactionMechanismTool testReactions = testReactions(reactionID, RHEA_RXN_DIR);
+        IPatternFingerprinter formedCleavedWFingerprint = testReactions
+                .getSelectedSolution()
+                .getBondChangeCalculator()
+                .getFormedCleavedWFingerprint();
+        assertEquals(2, formedCleavedWFingerprint.getFeatureCount());
+    }
+
+    //10570
+    @Test
+    public void Rhea10570() throws Exception {
+
+        String reactionID = "10570";
+        ReactionMechanismTool testReactions = testReactions(reactionID, RHEA_RXN_DIR);
+        IPatternFingerprinter formedCleavedWFingerprint = testReactions
+                .getSelectedSolution()
+                .getBondChangeCalculator()
+                .getFormedCleavedWFingerprint();
+        assertEquals(1, formedCleavedWFingerprint.getFeatureCount());
+    }
+
+    /*
+     * @FIXME
+     * Takes Donkey Years to Run- TO FIX
+     * 12573
+     *
+     */
+    @Test
+    public void Rhea12573() throws Exception {
+
+        String reactionID = "12573";
+        ReactionMechanismTool testReactions = testReactions(reactionID, RHEA_RXN_DIR);
+        IPatternFingerprinter formedCleavedWFingerprint = testReactions
+                .getSelectedSolution()
+                .getBondChangeCalculator()
+                .getFormedCleavedWFingerprint();
+        assertEquals(4, formedCleavedWFingerprint.getFeatureCount());
     }
 }
